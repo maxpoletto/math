@@ -10,11 +10,11 @@ function fix_dpi() {
     canvas.setAttribute('height', dpi * styleValue('height'));
 }
 
-var cols, rows, side;
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+var cols, rows, side;
 function initCanvas(n) {
     cols = Math.floor(Math.sqrt(n)+0.5);
     rows = cols
@@ -42,7 +42,6 @@ var delay;			// Can be updated dynamically.
 var color;
 async function sieve(n) {
     initCanvas(n);
-    console.log(ctx.fillStyle);
     var np = Array(n).fill(0);
     for (var p = 2; p*p <= n; p++) {
 	if (np[p] == 0) {
