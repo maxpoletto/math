@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset= "UTF-8">
+    <style>
+      canvas {
+	  width: 800px;
+	  height: 800px;
+	  border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Find primes up to: <input id="num" value=10000></p>
+    <p>Delay: <input type="range" class="slider" id="delay"
+		     min="0" max="100" value="0"></p>
+    <p>Use color: <input type="checkbox" id="color" checked></p>
+  <button class="button" id="runSieve" onclick="runSieve()">
+      Run sieve</button>
+    <hr>
+    <canvas id="canvas"></canvas>
+    <script src="sieve.js" defer></script>
+  </body>
+</html>
