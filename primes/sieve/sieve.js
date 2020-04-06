@@ -49,7 +49,10 @@ async function sieve(n) {
 		makeColor(p);
 	    }
 	    for (var i = 2*p; i <= n; i += p) {
-		np[i] = 1;
+		if (np[i] > 0) {
+		    continue;
+		}
+		np[i] = p;
 		mark(i);
 		if (delay > 0) {
 		    await sleep(delay);
