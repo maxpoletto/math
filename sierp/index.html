@@ -3,11 +3,18 @@
   <head>
     <meta charset= "UTF-8">
     <style>
-      canvas { width: 1000px; height: 1000px; border: 1px solid black; }
+      canvas {
+	  width: 800px;
+	  height: 800px;
+	  border: 1px solid black;
+      }
     </style>
     <script src="sierp.js" defer></script>
   </head>
   <body>
+    <p>Depth <span id='dv'></span>:
+      <input type="range" class="slider" id="depth"
+	     min="0" max="10" value="4"></p>
     <canvas id="canvas"></canvas>
   </body>
 </html>
