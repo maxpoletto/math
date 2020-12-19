@@ -36,17 +36,19 @@ function draw() {
     poly(w / 2, h / 2, w / 3, nvert);
 }
 
-function updateInfo(da, dp, dr) {
+function updateInfo(da, dp, dr1, dr2) {
     var r = 1;
     var a = Math.PI / nvert;
     var w = r * Math.sin(a);
     var h = r * Math.cos(a);
     var peri = nvert * w * 2;
     var area = nvert * w * h;
-    var ratio = peri / (2*r);
+    var r1 = area/peri;
+    var r2 = peri / (2*r);
     da.innerHTML = area.toFixed(4);
     dp.innerHTML = peri.toFixed(4);
-    dr.innerHTML = ratio.toFixed(4);
+    dr1.innerHTML = r1.toFixed(4);
+    dr2.innerHTML = r2.toFixed(4);
 }
 
 function init() {
@@ -55,12 +57,13 @@ function init() {
     var sv = document.getElementById('nv');
     var dispArea = document.getElementById('area');
     var dispPeri = document.getElementById('peri');
-    var dispRatio = document.getElementById('ratio');
-    updateInfo(dispArea, dispPeri, dispRatio);
+    var dispR1 = document.getElementById('ratio1');
+    var dispR2 = document.getElementById('ratio2');
+    updateInfo(dispArea, dispPeri, dispR1, dispR2);
     s.onchange = function () {
         nvert = this.value;
         sv.innerHTML = nvert;
-        updateInfo(dispArea, dispPeri, dispRatio);
+        updateInfo(dispArea, dispPeri, dispR1, dispR2);
         draw();
     }
     s.onchange();
