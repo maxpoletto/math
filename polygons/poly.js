@@ -60,13 +60,13 @@ function init() {
     var dispR1 = document.getElementById('ratio1');
     var dispR2 = document.getElementById('ratio2');
     updateInfo(dispArea, dispPeri, dispR1, dispR2);
-    s.onchange = function () {
+    s.oninput = function () {
         nvert = this.value;
         sv.innerHTML = nvert;
         updateInfo(dispArea, dispPeri, dispR1, dispR2);
         draw();
     }
-    s.onchange();
+    s.oninput();
 }
 
 init();
