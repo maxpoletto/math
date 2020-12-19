@@ -11,17 +11,17 @@ function fix_dpi() {
 }
 
 function poly(zx, zy, r, nvert) {
-    a = 0
-    d = 2 * Math.PI / nvert;
-    x = zx + r*Math.cos(a);
-    y = zy + r*Math.sin(a);
-    ctx.moveTo(x, y);
+    var d = 2 * Math.PI / nvert;
+    var a = -Math.PI/2;
+    var x = zx + r*Math.cos(a);
+    var y = zy + r*Math.sin(a);
     ctx.beginPath();
+    ctx.moveTo(x, y);
     for (i = 0; i < nvert; i++) {
-        x = zx + r*Math.cos(a)
-        y = zy + r*Math.sin(a)
-        ctx.lineTo(x, y)
-        a += d
+        a += d;
+        x = zx + r*Math.cos(a);
+        y = zy + r*Math.sin(a);
+        ctx.lineTo(x, y);
     }
     ctx.closePath();
     ctx.stroke();
@@ -36,13 +36,31 @@ function draw() {
     poly(w / 2, h / 2, w / 3, nvert);
 }
 
+function updateInfo(da, dp, dr) {
+    var r = 1;
+    var a = Math.PI / nvert;
+    var x = r * Math.sin(a);
+    var y = r * Math.cos(a);
+    var peri = nvert * 2 * x;
+    var area = nvert * x * y;
+    var ratio = peri / (2*r);
+    da.innerHTML = area;
+    dp.innerHTML = peri;
+    dr.innerHTML = ratio;
+}
+
 function init() {
     fix_dpi();
     var s = document.getElementById('nvert');
     var sv = document.getElementById('nv');
+    var dispArea = document.getElementById('area');
+    var dispPeri = document.getElementById('peri');
+    var dispRatio = document.getElementById('ratio');
+    updateInfo(dispArea, dispPeri, dispRatio);
     s.onchange = function () {
         nvert = this.value;
         sv.innerHTML = nvert;
+        updateInfo(dispArea, dispPeri, dispRatio);
         draw();
     }
     s.onchange();
