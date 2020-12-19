@@ -1,19 +1,23 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset= "UTF-8">
-    <style>
-      canvas {
-	  width: 800px;
-	  height: 800px;
-	  border: 1px solid black;
-      }
-    </style>
-    <script src="poly.js" defer></script>
-  </head>
-  <body>
-    <p>Vertices <span id='nv'></span>:
-      <input type="range" class="slider" id="nvert" min="3" max="100" value="3"></p>
-    <canvas id="canvas"></canvas>
-  </body>
+
+<head>
+  <meta charset="UTF-8">
+  <style>
+    canvas {
+      width: 800px;
+      height: 800px;
+      border: 1px solid black;
+    }
+  </style>
+  <script src="poly.js" defer></script>
+</head>
+
+<body>
+  <p>Vertices <span id='nv'></span>:
+    <input type="range" class="slider" id="nvert" min="3" max="100" value="3">
+  </p>
+  <canvas id="canvas"></canvas>
+</body>
+
 </html>
