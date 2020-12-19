@@ -39,14 +39,14 @@ function draw() {
 function updateInfo(da, dp, dr) {
     var r = 1;
     var a = Math.PI / nvert;
-    var x = r * Math.sin(a);
-    var y = r * Math.cos(a);
-    var peri = nvert * 2 * x;
-    var area = nvert * x * y;
+    var w = r * Math.sin(a);
+    var h = r * Math.cos(a);
+    var peri = nvert * w * 2;
+    var area = nvert * w * h;
     var ratio = peri / (2*r);
-    da.innerHTML = area;
-    dp.innerHTML = peri;
-    dr.innerHTML = ratio;
+    da.innerHTML = area.toFixed(4);
+    dp.innerHTML = peri.toFixed(4);
+    dr.innerHTML = ratio.toFixed(4);
 }
 
 function init() {
