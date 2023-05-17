@@ -1,3 +1,7 @@
+#!/usr/local/bin/python3
+
+# Simple code to solve the NYT Digits game, https://www.nytimes.com/games/digits
+
 import argparse
 import functools
 
@@ -32,9 +36,8 @@ def solve(path, numbers, target):
         if n == target:
             results.append(path)
     new_sets = generate_sets(numbers)
-    for s in new_sets:
-        p2 = path + [s[1]]
-        solve(p2, s[0], target)
+    for numbers2, path2 in new_sets:
+        solve(path + [path2], numbers2, target)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--Target", type=int, required=True, help = "Target")
