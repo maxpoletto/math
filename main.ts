@@ -15,7 +15,25 @@ canvas.height = 400;
 let scale = 0.5;
 let centerX = -0.5, centerY = 0;
 let oldCenterX = centerX, oldCenterY = centerY;
+let isPanning = false;
+let startX = 0, startY = 0;
 const zoomFactor = 1.1;
+
+function updateURL() {
+    const hash = `#${centerX},${centerY},${scale}`;
+    history.replaceState(null, '', hash);
+}
+
+window.addEventListener('load', () => {
+    const hash = window.location.hash.substring(1); // Remove the '#'
+    const parts = hash.split(',');
+    if (parts.length === 3) {
+	centerX = parseFloat(parts[0]);
+	centerY = parseFloat(parts[1]);
+	scale = parseFloat(parts[2]);
+	drawMandelbrot();
+    }
+});
 
 canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
@@ -24,11 +42,9 @@ canvas.addEventListener('wheel', (event) => {
     } else {
 	scale /= zoomFactor;
     }
+    updateURL();
     drawMandelbrot();
 });
-
-let isPanning = false;
-let startX = 0, startY = 0;
 
 function updateLabels(event: MouseEvent) {
     lCenterX.textContent = centerX.toString();
@@ -55,6 +71,7 @@ canvas.addEventListener('mousemove', (event) => {
     centerX = oldCenterX - (event.offsetX - startX) / (scale * canvas.width);
     centerY = oldCenterY - (event.offsetY - startY) / (scale * canvas.height);
     updateLabels(event);
+    updateURL();
     drawMandelbrot();
 });
 
