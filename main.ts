@@ -1,4 +1,3 @@
-const canvas = document.getElementById('triangleCanvas') as HTMLCanvasElement;
 const lCenterX = document.getElementById('centerX') as HTMLSpanElement;
 const lCenterY = document.getElementById('centerY') as HTMLSpanElement;
 const lEventX = document.getElementById('eventX') as HTMLSpanElement;
@@ -8,9 +7,12 @@ const lY0 = document.getElementById('y0') as HTMLSpanElement;
 const lX1 = document.getElementById('x1') as HTMLSpanElement;
 const lY1 = document.getElementById('y1') as HTMLSpanElement;
 
+const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
 canvas.width = 400;
 canvas.height = 400;
+const canvasWidth = canvas.width;
+const canvasHeight = canvas.height;
 
 let scale = 0.5;
 let centerX = -0.5, centerY = 0;
@@ -31,10 +33,11 @@ window.addEventListener('load', () => {
 	centerX = parseFloat(parts[0]);
 	centerY = parseFloat(parts[1]);
 	scale = parseFloat(parts[2]);
-	drawMandelbrot();
     }
+    drawMandelbrot(true);
 });
 
+let zoomTimeout : number;
 canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (event.deltaY < 0) { // zoom in
@@ -43,7 +46,12 @@ canvas.addEventListener('wheel', (event) => {
 	scale /= zoomFactor;
     }
     updateURL();
-    drawMandelbrot();
+    drawMandelbrot(false);
+    clearTimeout(zoomTimeout);
+
+    zoomTimeout = setTimeout(() => {
+	drawMandelbrot(true); // Full precision draw
+    }, 100 /* ms */);
 });
 
 function updateLabels(event: MouseEvent) {
@@ -51,10 +59,10 @@ function updateLabels(event: MouseEvent) {
     lCenterY.textContent = centerY.toString();
     lEventX.textContent = event.offsetX.toString(); 
     lEventY.textContent = event.offsetY.toString();
-    lX0.textContent = ((0 - canvas.width / 2) / (scale * canvas.width) + centerX).toString();
-    lY0.textContent = ((0 - canvas.height / 2) / (scale * canvas.height) + centerY).toString();
-    lX1.textContent = ((canvas.width-1 - canvas.width / 2) / (scale * canvas.width) + centerX).toString();
-    lY1.textContent = ((canvas.height-1 - canvas.height / 2) / (scale * canvas.height) + centerY).toString();
+    lX0.textContent = ((0 - canvasWidth / 2) / (scale * canvasWidth) + centerX).toString();
+    lY0.textContent = ((0 - canvasHeight / 2) / (scale * canvasHeight) + centerY).toString();
+    lX1.textContent = ((canvasWidth-1 - canvasWidth / 2) / (scale * canvasWidth) + centerX).toString();
+    lY1.textContent = ((canvasHeight-1 - canvasHeight / 2) / (scale * canvasHeight) + centerY).toString();
 }
 
 canvas.addEventListener('mousedown', (event) => {
@@ -68,47 +76,44 @@ canvas.addEventListener('mousedown', (event) => {
 
 canvas.addEventListener('mousemove', (event) => {
     if (!isPanning) return;
-    centerX = oldCenterX - (event.offsetX - startX) / (scale * canvas.width);
-    centerY = oldCenterY - (event.offsetY - startY) / (scale * canvas.height);
+    centerX = oldCenterX - (event.offsetX - startX) / (scale * canvasWidth);
+    centerY = oldCenterY - (event.offsetY - startY) / (scale * canvasHeight);
     updateLabels(event);
     updateURL();
-    drawMandelbrot();
+    drawMandelbrot(false);
 });
 
 canvas.addEventListener('mouseup', () => {
-  isPanning = false;
+    isPanning = false;
+    drawMandelbrot(true);
 });
 
-function drawMandelbrot() {
+function drawMandelbrot(precise: boolean) {
     if (!ctx) return;
-
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const maxIteration = 360; // Maximum number of iterations per point
-
+    let iterMax = 360;
+    if (!precise) iterMax = 30;
+    const hcw = canvasWidth / 2, hch = canvasHeight / 2;
+    const scw = scale * canvasWidth, sch = scale * canvasHeight;
     for (let cx = 0; cx < canvasWidth; cx++) {
 	for (let cy = 0; cy < canvasHeight; cy++) {
-	    let iteration = 0;
-	    let x0 = (cx - canvasWidth / 2) / (scale * canvasWidth) + centerX;
-	    let y0 = (cy - canvasHeight / 2) / (scale * canvasHeight) + centerY;
+	    let iter = 0;
+	    let x0 = (cx - hcw) / scw + centerX;
+	    let y0 = (cy - hch) / sch + centerY;
 	    let x = 0, y = 0, x2 = 0, y2 = 0;
-	    while (x2 + y2 < 4 && iteration < maxIteration) {
-		y = (x+x)*y + y0;
+	    while (x2 + y2 < 4 && iter < iterMax) {
+		y = (x + x) * y + y0;
 		x = x2 - y2 + x0;
-		x2 = x*x;
-		y2 = y*y;
-		iteration++;
+		x2 = x * x;
+		y2 = y * y;
+		iter++;
 	    }
-	    // Coloring based on the number of iterations
-	    if (iteration == maxIteration) {
+	    if (iter == iterMax) {
 		ctx.fillStyle = '#000';
 	    } else {
-		const hue = (250 - iteration) % 360;
+		const hue = (250 - iter) % iterMax;
 		ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
 	    }
-	    ctx.fillRect(cx, cy, 1, 1); // Draw each pixel
+	    ctx.fillRect(cx, cy, 1, 1);
 	}
     }
 }
-
-drawMandelbrot();
