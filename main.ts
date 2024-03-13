@@ -9,15 +9,16 @@ const lY1 = document.getElementById('y1') as HTMLSpanElement;
 
 const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
-canvas.width = 400;
-canvas.height = 400;
-const canvasWidth = canvas.width;
-const canvasHeight = canvas.height;
+
+canvas.width = 800;
+canvas.height = 800;
+let canvasWidth = canvas.width;
+let canvasHeight = canvas.height;
 
 let scale = 0.5;
 let centerX = -0.5, centerY = 0;
 let oldCenterX = centerX, oldCenterY = centerY;
-let isPanning = false;
+let isPanning = false, isZooming = false;
 let startX = 0, startY = 0;
 const zoomFactor = 1.1;
 
@@ -34,7 +35,7 @@ window.addEventListener('load', () => {
 	centerY = parseFloat(parts[1]);
 	scale = parseFloat(parts[2]);
     }
-    drawMandelbrot(true);
+    drawMandelbrot();
 });
 
 let zoomTimeout : number;
@@ -44,13 +45,19 @@ canvas.addEventListener('wheel', (event) => {
 	scale *= zoomFactor;
     } else {
 	scale /= zoomFactor;
-    }
+    }    
     updateURL();
-    drawMandelbrot(false);
+    if (!isZooming) {
+	isZooming = true;
+	fastMode();
+    }
+    drawMandelbrot();
     clearTimeout(zoomTimeout);
 
     zoomTimeout = setTimeout(() => {
-	drawMandelbrot(true); // Full precision draw
+	isZooming = false;
+	preciseMode();
+	drawMandelbrot();
     }, 100 /* ms */);
 });
 
@@ -71,6 +78,8 @@ canvas.addEventListener('mousedown', (event) => {
     startY = event.offsetY;
     oldCenterX = centerX;
     oldCenterY = centerY;
+    fastMode();
+    drawMandelbrot();
     updateLabels(event);
 });
 
@@ -80,18 +89,32 @@ canvas.addEventListener('mousemove', (event) => {
     centerY = oldCenterY - (event.offsetY - startY) / (scale * canvasHeight);
     updateLabels(event);
     updateURL();
-    drawMandelbrot(false);
+    drawMandelbrot();
 });
 
 canvas.addEventListener('mouseup', () => {
     isPanning = false;
-    drawMandelbrot(true);
+    preciseMode();
+    drawMandelbrot();
 });
 
-function drawMandelbrot(precise: boolean) {
+function fastMode() {
+    canvas.width = 200;
+    canvas.height = 200;
+    canvasWidth = canvas.width;
+    canvasHeight = canvas.height;
+}
+
+function preciseMode() {
+    canvas.width = 800;
+    canvas.height = 800;
+    canvasWidth = canvas.width;
+    canvasHeight = canvas.height;
+}
+
+function drawMandelbrot() {
     if (!ctx) return;
-    let iterMax = 360;
-    if (!precise) iterMax = 30;
+    const iterMax = 360;
     const hcw = canvasWidth / 2, hch = canvasHeight / 2;
     const scw = scale * canvasWidth, sch = scale * canvasHeight;
     for (let cx = 0; cx < canvasWidth; cx++) {
