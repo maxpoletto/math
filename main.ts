@@ -140,3 +140,65 @@ function drawMandelbrot() {
 	}
     }
 }
+
+canvas.addEventListener('touchstart', (event) => {
+    const touch = event.touches[0];
+    isPanning = true;
+    startX = touch.pageX;
+    startY = touch.pageY;
+    oldCenterX = centerX;
+    oldCenterY = centerY;
+    fastMode();
+    event.preventDefault(); // Prevent scrolling and zooming by the browser
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (event) => {
+    if (!isPanning) return;
+    const touch = event.touches[0];
+    centerX = oldCenterX - (touch.pageX - startX) / (scale * canvasWidth);
+    centerY = oldCenterY - (touch.pageY - startY) / (scale * canvasHeight);
+    updateURL();
+    drawMandelbrot();
+    event.preventDefault(); // Prevent scrolling and zooming by the browser
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+    isPanning = false;
+    preciseMode();
+    drawMandelbrot();
+});
+
+let initialPinchDistance = -1;
+
+function getDistanceBetweenTouches(event : TouchEvent) {
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
+    return Math.sqrt(Math.pow(touch2.pageX - touch1.pageX, 2) + Math.pow(touch2.pageY - touch1.pageY, 2));
+}
+
+canvas.addEventListener('touchmove', (event) => {
+    if (event.touches.length == 2) {
+	// Prevent default to avoid page zooming and panning in the browser
+	event.preventDefault();
+
+	const distance = getDistanceBetweenTouches(event);
+	if (initialPinchDistance < 0) {
+	    initialPinchDistance = distance;
+	} else {
+	    const pinchScale = distance / initialPinchDistance;
+	    scale *= pinchScale;
+	    updateURL();
+	    drawMandelbrot();
+	    initialPinchDistance = distance;
+	}
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (event) => {
+    initialPinchDistance = -1; // Reset initial distance on touch end
+    if (!event.touches.length) {
+	isPanning = false;
+	preciseMode();
+	drawMandelbrot();
+    }
+});
