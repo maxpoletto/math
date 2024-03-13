@@ -10,6 +10,9 @@ const lY1 = document.getElementById('y1') as HTMLSpanElement;
 const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
 
+//cliWidth = canvas.clientWidth;
+//cliHeight = canvas.clientHeight;'
+
 canvas.width = 800;
 canvas.height = 800;
 let canvasWidth = canvas.width;
@@ -173,7 +176,9 @@ let initialPinchDistance = -1;
 function getDistanceBetweenTouches(event : TouchEvent) {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
-    return Math.sqrt(Math.pow(touch2.pageX - touch1.pageX, 2) + Math.pow(touch2.pageY - touch1.pageY, 2));
+    let dx = touch2.pageX - touch1.pageX;
+    let dy = touch2.pageY - touch1.pageY;
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 canvas.addEventListener('touchmove', (event) => {
