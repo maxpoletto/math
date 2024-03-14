@@ -62,6 +62,7 @@ window.addEventListener('load', () => {
 	scale = canvas.width / defaultLogicalWidth;
 	logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
     }
+    initWorkers(true);
     drawMandelbrot();
     isPanning = isZooming = false;
 });
@@ -71,6 +72,7 @@ window.addEventListener('resize', () => {
     canvas.height = canvas.clientHeight;
     scale = canvas.width / logical.width;
     logical.height = canvas.height / scale;
+    initWorkers(true);
     drawMandelbrot();
     isPanning = isZooming = false;
 });
@@ -83,6 +85,8 @@ let isZooming: boolean;
 let zoomTimeout : number;
 canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
+    clearTimeout(zoomTimeout);
+    console.log('wheel');
     if (event.deltaY < 0) { // zoom in
 	scale *= zoomFactor;
 	logical.width /= zoomFactor;
@@ -97,13 +101,13 @@ canvas.addEventListener('wheel', (event) => {
 	fastMode();
     }
     drawMandelbrot();
-    clearTimeout(zoomTimeout);
 
     zoomTimeout = setTimeout(() => {
+	console.log('wheel timeout');
 	isZooming = false;
 	preciseMode();
 	drawMandelbrot();
-    }, 100 /* ms */);
+    }, 300 /* ms */);
 });
 
 /*
@@ -191,7 +195,7 @@ canvas.addEventListener('touchmove', (event) => {
 
 canvas.addEventListener('touchend', () => {
     panEnd();
-    isZooming = true;
+    isZooming = false;
     initialPinchDistance = -1;
 });
 
@@ -199,19 +203,82 @@ canvas.addEventListener('touchend', () => {
  * Rendering logic
  */
 
+const iterMax = 360;
+const defaultNumWorkers = 4;
+let workers: Worker[] = [];
+let numWorkers: number = defaultNumWorkers;
+
 function fastMode() {
     canvas.width = canvas.clientWidth / 10;
     canvas.height = canvas.clientHeight / 10;
+    initWorkers(false);
 }
 
 function preciseMode() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
+    initWorkers(true);
+}
+
+function initWorkers(multi: boolean) {
+    if (workers.length > 0) {
+	workers.forEach(w => w.terminate());
+	workers.length = 0;
+    }
+    numWorkers = multi ? defaultNumWorkers : 1;
+    const stripeWidth = Math.floor(canvas.width / numWorkers);
+    const canvasHeight = canvas.height;
+    for (let i = 0; i < numWorkers; i++) {
+	const worker = new Worker('renderWorker.js');
+	workers.push(worker);
+	worker.onmessage = function(e) {
+	    const stripeId = e.data.stripeId;
+	    const view = new Uint16Array(e.data.buf);
+	    const [x0, x1] = [stripeId * stripeWidth, (stripeId +1) * stripeWidth];
+
+	    let index = 0;
+	    for (let cx = x0; cx < x1; cx++) {
+		for (let cy = 0; cy < canvasHeight; cy++) {
+		    const iter = view[index++];
+		    if (iter == iterMax) {
+			ctx.fillStyle = '#000';
+		    } else {
+			const hue = (250 - iter) % iterMax;
+			ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+		    }
+		    ctx.fillRect(cx, cy, 1, 1);
+		}
+	    }
+	};
+    }
 }
 
 function drawMandelbrot() {
     if (!ctx) return;
     updateMetadata();
+
+    const [ldx, ldy] = [logical.width / canvas.width, logical.height / canvas.height];
+    let [lx, ly] = logical.upperLeft();
+    const stripeWidth = Math.floor(canvas.width / numWorkers);
+    for (let i = 0; i < numWorkers; i++) {
+	console.log(`worker ${i} ${stripeWidth} ${canvas.height}`)
+	workers[i].postMessage({
+	    stripe: { id: i, x0: i * stripeWidth, x1: (i + 1) * stripeWidth },
+	    canvasHeight: canvas.height,
+	    lx: lx,
+	    ly: ly,
+	    ldx: ldx,
+	    ldy: ldy,
+	    iterMax: iterMax
+	});
+    }
+}
+/*
+
+function drawMandelbrot() {
+    if (!ctx) return;
+    updateMetadata();
+    console.log(`draw ${canvas.width}`);
     const iterMax = 360;
     const canvasWidth = canvas.width, canvasHeight = canvas.height;
     const [ldx, ldy] = [logical.width / canvasWidth, logical.height / canvasHeight];
@@ -241,3 +308,4 @@ function drawMandelbrot() {
 	x0 += ldx;
     }
 }
+*/
