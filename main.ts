@@ -57,10 +57,11 @@ window.addEventListener('load', () => {
     if (parts.length === 3) {
 	scale = parseFloat(parts[2]);
 	[x, y] = [parseFloat(parts[0]), parseFloat(parts[1])];
+	logical = new Viewport(canvas.width / scale, canvas.height / scale, x, y);
     } else {
 	scale = canvas.width / defaultLogicalWidth;
+	logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
     }
-    logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
     drawMandelbrot();
     isPanning = isZooming = false;
 });
