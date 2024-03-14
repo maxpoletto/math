@@ -36,7 +36,6 @@ let logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale,
 			   defaultLogicalCX, defaultLogicalCY);
 
 let oldCX = logical.cx, oldCY = logical.cy;
-let isPanning = false, isZooming = false;
 let startX = 0, startY = 0;
 
 function updateURL() {
@@ -44,9 +43,15 @@ function updateURL() {
     history.replaceState(null, '', hash);
 }
 
-function updateLabels(event: MouseEvent) {
+// TODO: clean up
+function updateLabels(/*event: MouseEvent*/) {
     lViewport.textContent = logical.toString();
-    lEvent.textContent = `(${event.offsetX}, ${event.offsetY})`;
+//    lEvent.textContent = `(${event.offsetX}, ${event.offsetY})`;
+}
+
+function updateMetadata() {
+    updateURL();
+    updateLabels();
 }
 
 /*
@@ -67,9 +72,12 @@ window.addEventListener('load', () => {
 // TODO: handle resize events
 
 /*
- * Zoom
+ * Zooming
  */
 
+/* Zooming with the mouse wheel */
+
+let isPanning = false, isZooming = false;
 let zoomTimeout : number;
 canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
@@ -97,90 +105,28 @@ canvas.addEventListener('wheel', (event) => {
     }, 100 /* ms */);
 });
 
-/*
- * Panning with the mouse
- */
-
-canvas.addEventListener('mousedown', (event) => {
-    isPanning = true;
-    startX = event.offsetX;
-    startY = event.offsetY;
-    oldCX = logical.cx;
-    oldCY = logical.cy;
-    fastMode();
-    drawMandelbrot();
-    updateLabels(event);
-});
-
-canvas.addEventListener('mousemove', (event) => {
-    if (!isPanning) return;
-    // changed canvas to client values
-    logical.cx = oldCX - (event.offsetX - startX) / scale;
-    logical.cy = oldCY - (event.offsetY - startY) / scale;
-    updateLabels(event);
-    updateURL();
-    drawMandelbrot();
-});
-
-canvas.addEventListener('mouseup', () => {
-    isPanning = false;
-    preciseMode();
-    drawMandelbrot();
-});
-
-/*
- * Panning with touch actions
- */
-
-canvas.addEventListener('touchstart', (event) => {
-    const touch = event.touches[0];
-    isPanning = true;
-    startX = touch.pageX;
-    startY = touch.pageY;
-    oldCX = logical.cx;
-    oldCY = logical.cy;
-    fastMode();
-    event.preventDefault(); // Prevent scrolling and zooming by the browser
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (event) => {
-    if (!isPanning) return;
-    const touch = event.touches[0];
-    logical.cx = oldCX - (touch.pageX - startX) / scale;
-    logical.cy = oldCY - (touch.pageY - startY) / scale;
-    updateURL();
-    drawMandelbrot();
-    event.preventDefault(); // Prevent scrolling and zooming by the browser
-}, { passive: false });
-
-canvas.addEventListener('touchend', () => {
-    isPanning = false;
-    preciseMode();
-    drawMandelbrot();
-});
+/* Zooming with touch actions */
 
 let initialPinchDistance = -1;
 
 function getDistanceBetweenTouches(event : TouchEvent) {
-    const touch1 = event.touches[0];
-    const touch2 = event.touches[1];
-    let dx = touch2.pageX - touch1.pageX;
-    let dy = touch2.pageY - touch1.pageY;
+    const [touch1, touch2] = [event.touches[0], event.touches[1]];
+    const [dx, dy] = [touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY];
     return Math.sqrt(dx * dx + dy * dy);
 }
 
 canvas.addEventListener('touchmove', (event) => {
     if (event.touches.length == 2) {
-	// Prevent default to avoid page zooming and panning in the browser
 	event.preventDefault();
-
 	const distance = getDistanceBetweenTouches(event);
 	if (initialPinchDistance < 0) {
 	    initialPinchDistance = distance;
 	} else {
 	    const pinchScale = distance / initialPinchDistance;
 	    scale *= pinchScale;
-	    updateURL();
+	    logical.width /= pinchScale;
+	    logical.height /= pinchScale;
+	    updateMetadata();
 	    drawMandelbrot();
 	    initialPinchDistance = distance;
 	}
@@ -189,11 +135,72 @@ canvas.addEventListener('touchmove', (event) => {
 
 canvas.addEventListener('touchend', (event) => {
     initialPinchDistance = -1; // Reset initial distance on touch end
+/* // TODO: check if unnecessary
     if (!event.touches.length) {
 	isPanning = false;
 	preciseMode();
 	drawMandelbrot();
     }
+*/
+});
+
+/*
+ * Panning
+ */
+
+function panStart(x: number, y: number) {
+    isPanning = true;
+    [startX, startY] = [x, y];
+    [oldCX, oldCY] = [logical.cx, logical.cy];
+    fastMode();
+    drawMandelbrot();
+    updateMetadata();
+}
+
+function pan(x: number, y: number) {
+    if (!isPanning) return;
+    logical.cx = oldCX - (x - startX) / scale;
+    logical.cy = oldCY - (y - startY) / scale;
+    updateMetadata();
+    drawMandelbrot();
+}
+
+function panEnd() {
+    isPanning = false;
+    preciseMode();
+    drawMandelbrot();
+}
+
+/* Panning with the mouse */
+
+canvas.addEventListener('mousedown', (event) => {
+    panStart(event.offsetX, event.offsetY);
+});
+
+canvas.addEventListener('mousemove', (event) => {
+    pan(event.offsetX, event.offsetY);
+});
+
+canvas.addEventListener('mouseup', () => {
+    panEnd();
+});
+
+/* Panning with touch actions */
+
+canvas.addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    const touch = event.touches[0];
+    panStart(touch.pageX, touch.pageY);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (event) => {
+    event.preventDefault();
+    const touch = event.touches[0];
+    pan(touch.pageX, touch.pageY);
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+    panEnd();
 });
 
 /*
@@ -214,10 +221,8 @@ function drawMandelbrot() {
     if (!ctx) return;
     const iterMax = 360;
     const canvasWidth = canvas.width, canvasHeight = canvas.height;
-    const hcw = canvas.width / 2, hch = canvas.height / 2;
-    const scw = scale * canvas.width, sch = scale * canvas.height;
+    const [ldx, ldy] = [logical.width / canvasWidth, logical.height / canvasHeight];
     let [lx, ly] = logical.upperLeft();
-    let [ldx, ldy] = [logical.width / canvasWidth, logical.height / canvasHeight];
     let x0 = lx;
     for (let cx = 0; cx < canvasWidth; cx++) {
 	let y0 = ly;
