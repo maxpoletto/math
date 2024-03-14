@@ -1,7 +1,11 @@
 const lViewport = document.getElementById('viewport') as HTMLSpanElement;
-const lEvent = document.getElementById('event') as HTMLSpanElement;
 const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
+
+const zoomFactor = 1.1;
+const defaultLogicalWidth = 2.5;
+const defaultLogicalCX = -0.75;
+const defaultLogicalCY = 0;
 
 class Viewport {
     public width: number;
@@ -19,39 +23,25 @@ class Viewport {
 	return [this.cx - this.width/2, this.cy - this.height/2];
     }
     public toString() : string {
-	return `(${this.cx}, ${this.cy}) ` +
-	    `[(${this.cx-this.width/2}, ${this.cy-this.height/2}),` +
-	    ` (${this.cx+this.width/2}, ${this.cy+this.height/2})]`;
+	return `(${this.cx.toFixed(5)}, ${this.cy.toFixed(5)}) ` +
+	    `[(${(this.cx-this.width/2).toFixed(5)}, ${(this.cy-this.height/2).toFixed(5)}),` +
+	    ` (${(this.cx+this.width/2).toFixed(5)}, ${(this.cy+this.height/2).toFixed(5)})]`;
     }
 }
 
-canvas.width = canvas.clientWidth;
-canvas.height = canvas.clientHeight;
-const zoomFactor = 1.1;
-const defaultLogicalWidth = 2.5;
-const defaultLogicalCX = -0.75;
-const defaultLogicalCY = 0;
-let scale = canvas.clientWidth / defaultLogicalWidth;
-let logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale,
-			   defaultLogicalCX, defaultLogicalCY);
-
-let oldCX = logical.cx, oldCY = logical.cy;
-let startX = 0, startY = 0;
-
-function updateURL() {
-    const hash = `#${logical.cx},${logical.cy},${scale}`;
-    history.replaceState(null, '', hash);
-}
-
-// TODO: clean up
-function updateLabels(/*event: MouseEvent*/) {
-    lViewport.textContent = logical.toString();
-//    lEvent.textContent = `(${event.offsetX}, ${event.offsetY})`;
-}
+let scale: number;
+let oldCX: number;
+let oldCY: number;
+let startX: number;
+let startY: number;
+let logical: Viewport;
 
 function updateMetadata() {
-    updateURL();
-    updateLabels();
+    // Update URL
+    const hash = `#${logical.cx},${logical.cy},${scale}`;
+    history.replaceState(null, '', hash);
+    // Update viewport information
+    lViewport.textContent = logical.toString();
 }
 
 /*
@@ -59,17 +49,28 @@ function updateMetadata() {
  */
 
 window.addEventListener('load', () => {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
     const hash = window.location.hash.substring(1); // Remove the '#'
     const parts = hash.split(',');
+    let [x, y] = [defaultLogicalCX, defaultLogicalCY];
     if (parts.length === 3) {
-	logical.cx = parseFloat(parts[0]);
-	logical.cy = parseFloat(parts[1]);
 	scale = parseFloat(parts[2]);
+	[x, y] = [parseFloat(parts[0]), parseFloat(parts[1])];
+    } else {
+	scale = canvas.width / defaultLogicalWidth;
     }
+    logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
     drawMandelbrot();
 });
 
-// TODO: handle resize events
+window.addEventListener('resize', () => {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    scale = canvas.width / logical.width;
+    logical.height = canvas.height / scale;
+    drawMandelbrot();
+});
 
 /*
  * Zooming
@@ -90,7 +91,6 @@ canvas.addEventListener('wheel', (event) => {
 	logical.width *= zoomFactor;
 	logical.height *= zoomFactor;
     }    
-    updateURL();
     if (!isZooming) {
 	isZooming = true;
 	fastMode();
@@ -126,7 +126,6 @@ canvas.addEventListener('touchmove', (event) => {
 	    scale *= pinchScale;
 	    logical.width /= pinchScale;
 	    logical.height /= pinchScale;
-	    updateMetadata();
 	    drawMandelbrot();
 	    initialPinchDistance = distance;
 	}
@@ -154,14 +153,12 @@ function panStart(x: number, y: number) {
     [oldCX, oldCY] = [logical.cx, logical.cy];
     fastMode();
     drawMandelbrot();
-    updateMetadata();
 }
 
 function pan(x: number, y: number) {
     if (!isPanning) return;
     logical.cx = oldCX - (x - startX) / scale;
     logical.cy = oldCY - (y - startY) / scale;
-    updateMetadata();
     drawMandelbrot();
 }
 
@@ -219,6 +216,7 @@ function preciseMode() {
 
 function drawMandelbrot() {
     if (!ctx) return;
+    updateMetadata();
     const iterMax = 360;
     const canvasWidth = canvas.width, canvasHeight = canvas.height;
     const [ldx, ldy] = [logical.width / canvasWidth, logical.height / canvasHeight];
