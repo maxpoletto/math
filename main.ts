@@ -229,7 +229,7 @@ function initWorkers(multi: boolean) {
     const stripeWidth = Math.floor(canvas.width / numWorkers);
     const canvasHeight = canvas.height;
     for (let i = 0; i < numWorkers; i++) {
-	const worker = new Worker('renderWorker.js');
+	const worker = new Worker('renderworker.js');
 	workers.push(worker);
 	worker.onmessage = function(e) {
 	    const stripeId = e.data.stripeId;
