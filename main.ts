@@ -19,8 +19,12 @@ class Viewport {
 	this.cx = cx;
 	this.cy = cy;
     }
-    public upperLeft() : [number, number] {
+    public upperLeft(): [number, number] {
 	return [this.cx - this.width/2, this.cy - this.height/2];
+    }
+    public pointFromCanvas(canvas: HTMLCanvasElement, x: number, y: number): [number, number] {
+	let z = canvas.clientWidth / this.width;
+	return [x/z - this.cx, y/z - this.cy];
     }
     public toString() : string {
 	return `(${this.cx.toFixed(5)}, ${this.cy.toFixed(5)}) ` +
@@ -87,15 +91,23 @@ canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     clearTimeout(zoomTimeout);
     console.log('wheel');
+    let [x, y] = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
+    let [dx, dy] = [x - logical.cx, y - logical.cy];
     if (event.deltaY < 0) { // zoom in
 	scale *= zoomFactor;
 	logical.width /= zoomFactor;
 	logical.height /= zoomFactor;
+	dx /= zoomFactor;
+	dy /= zoomFactor;
     } else {
 	scale /= zoomFactor;
 	logical.width *= zoomFactor;
 	logical.height *= zoomFactor;
+	dx *= zoomFactor;
+	dy *= zoomFactor;
     }    
+    logical.cx = x + dx;
+    logical.cy = y + dy;
     if (!isZooming) {
 	isZooming = true;
 	fastMode();
@@ -120,6 +132,7 @@ function panStart(x: number, y: number) {
     [startX, startY] = [x, y];
     [oldCX, oldCY] = [logical.cx, logical.cy];
     fastMode();
+
     drawMandelbrot();
 }
 
