@@ -226,24 +226,24 @@ function initWorkers(multi: boolean) {
 	workers.length = 0;
     }
     numWorkers = multi ? defaultNumWorkers : 1;
-    const stripeWidth = Math.floor(canvas.width / numWorkers);
-    const canvasHeight = canvas.height;
+    const [canvasWidth, canvasHeight] = [canvas.width, canvas.height];
     for (let i = 0; i < numWorkers; i++) {
 	const worker = new Worker('renderworker.js');
 	workers.push(worker);
 	worker.onmessage = function(e) {
-	    const stripeId = e.data.stripeId;
+	    const id = e.data.id;
 	    const view = new Uint16Array(e.data.buf);
-	    const [x0, x1] = [stripeId * stripeWidth, (stripeId +1) * stripeWidth];
+
+	    console.log(`main ${id}/${numWorkers}, cw=${canvasWidth}, ch=${canvasHeight}`);
 
 	    let index = 0;
-	    for (let cx = x0; cx < x1; cx++) {
+	    for (let cx = id; cx < canvasWidth; cx += numWorkers) {
 		for (let cy = 0; cy < canvasHeight; cy++) {
 		    const iter = view[index++];
 		    if (iter == iterMax) {
 			ctx.fillStyle = '#000';
 		    } else {
-			const hue = (250 - iter) % iterMax;
+			const hue = (300 - iter) % iterMax;
 			ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
 		    }
 		    ctx.fillRect(cx, cy, 1, 1);
@@ -256,14 +256,13 @@ function initWorkers(multi: boolean) {
 function drawMandelbrot() {
     if (!ctx) return;
     updateMetadata();
-
     const [ldx, ldy] = [logical.width / canvas.width, logical.height / canvas.height];
     let [lx, ly] = logical.upperLeft();
-    const stripeWidth = Math.floor(canvas.width / numWorkers);
     for (let i = 0; i < numWorkers; i++) {
-	console.log(`worker ${i} ${stripeWidth} ${canvas.height}`)
 	workers[i].postMessage({
-	    stripe: { id: i, x0: i * stripeWidth, x1: (i + 1) * stripeWidth },
+	    id: i,
+	    numWorkers: numWorkers,
+	    canvasWidth: canvas.width,
 	    canvasHeight: canvas.height,
 	    lx: lx,
 	    ly: ly,
@@ -273,8 +272,8 @@ function drawMandelbrot() {
 	});
     }
 }
-/*
 
+/*
 function drawMandelbrot() {
     if (!ctx) return;
     updateMetadata();
