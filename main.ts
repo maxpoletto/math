@@ -2,6 +2,17 @@ const lViewport = document.getElementById('viewport') as HTMLSpanElement;
 const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
 
+let hueBase = 250;
+var hueSlider = document.getElementById('hue') as HTMLInputElement;
+var hueVal = document.getElementById('hueval') as HTMLSpanElement;
+hueVal.innerHTML = hueBase.toString();
+
+hueSlider.onchange = function () {
+    hueBase = +hueSlider.value;
+    hueVal.innerHTML = hueBase.toString();
+    drawMandelbrot();
+}
+
 const zoomFactor = 1.1;
 const defaultLogicalWidth = 2.5;
 const defaultLogicalCX = -0.75;
@@ -243,7 +254,7 @@ function initWorkers(multi: boolean) {
 		    if (iter == iterMax) {
 			ctx.fillStyle = '#000';
 		    } else {
-			const hue = (300 - iter) % iterMax;
+			const hue = (hueBase - iter) % iterMax;
 			ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
 		    }
 		    ctx.fillRect(cx, cy, 1, 1);
