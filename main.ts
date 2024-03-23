@@ -1,4 +1,5 @@
 const lViewport = document.getElementById('viewport') as HTMLSpanElement;
+const lCurPos = document.getElementById('curlogical') as HTMLSpanElement;
 const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
 
@@ -6,11 +7,11 @@ var hueSlider = document.getElementById('hue') as HTMLInputElement;
 var hueVal = document.getElementById('hueval') as HTMLSpanElement;
 let hueBase = +hueSlider.value;
 
-hueSlider.onchange = function () {
+hueSlider.addEventListener('change', () => {
     hueBase = +hueSlider.value;
-    hueVal.innerHTML = hueSlider.value;
+    hueVal.textContent = hueSlider.value;
     drawMandelbrot();
-}
+});
 
 const zoomFactor = 1.1;
 const defaultLogicalWidth = 2.5;
@@ -29,6 +30,10 @@ class Viewport {
 	this.cx = cx;
 	this.cy = cy;
     }
+    public pointFromCanvas(canvas: HTMLCanvasElement, x: number, y: number): [number, number] {
+	let z = canvas.clientWidth / this.width;
+	return [x/z + this.cx - this.width/2, y/z + this.cy - this.height/2];
+    }
     public upperLeft() : [number, number] {
 	return [this.cx - this.width/2, this.cy - this.height/2];
     }
@@ -46,6 +51,9 @@ let startX: number;
 let startY: number;
 let logical: Viewport;
 
+function showPos(xy: [number, number]) {
+    lCurPos.textContent = `(${xy[0]}, ${xy[1]})`;
+}
 function updateMetadata() {
     // Update URL
     const hash = `#${logical.cx},${logical.cy},${scale}`;
@@ -59,7 +67,6 @@ function updateMetadata() {
  */
 
 window.addEventListener('load', () => {
-    console.log("****************");
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     const hash = window.location.hash.substring(1); // Remove the '#'
@@ -95,18 +102,25 @@ window.addEventListener('resize', () => {
 let isZooming: boolean;
 let zoomTimeout : number;
 canvas.addEventListener('wheel', (event) => {
+    console.log('wheel');
     event.preventDefault();
     clearTimeout(zoomTimeout);
-    console.log('wheel');
+    let [x, y] = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
+    let [dx, dy] = [x-logical.cx, y-logical.cy];
     if (event.deltaY < 0) { // zoom in
 	scale *= zoomFactor;
 	logical.width /= zoomFactor;
 	logical.height /= zoomFactor;
+	dx /= zoomFactor;
+	dy /= zoomFactor;
     } else {
 	scale /= zoomFactor;
 	logical.width *= zoomFactor;
 	logical.height *= zoomFactor;
+	dx *= zoomFactor;
+	dy *= zoomFactor;
     }    
+    [logical.cx, logical.cy] = [x-dx, y-dy];
     if (!isZooming) {
 	isZooming = true;
 	fastMode();
@@ -119,6 +133,26 @@ canvas.addEventListener('wheel', (event) => {
 	preciseMode();
 	drawMandelbrot();
     }, 300 /* ms */);
+});
+
+/*
+ * Zooming (with doubleclick)
+ */
+
+canvas.addEventListener('dblclick', (event) => {
+    console.log('dblclick');
+    event.preventDefault();
+    clearTimeout(clickTimeout); // Prevent single-click action just in case
+    lastClickMs = 0;
+    let [x, y] = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
+    let [dx, dy] = [x-logical.cx, y-logical.cy];
+    dx /= zoomFactor;
+    dy /= zoomFactor;
+    scale *= zoomFactor;
+    logical.width /= zoomFactor;
+    logical.height /= zoomFactor;
+    [logical.cx, logical.cy] = [x-dx, y-dy];
+    drawMandelbrot();
 });
 
 /*
@@ -135,7 +169,6 @@ function panStart(x: number, y: number) {
 }
 
 function pan(x: number, y: number) {
-    if (!isPanning) return;
     logical.cx = oldCX - (x - startX) / scale;
     logical.cy = oldCY - (y - startY) / scale;
     drawMandelbrot();
@@ -151,15 +184,36 @@ function panEnd() {
  * Panning with the mouse
  */
 
+let lastClickMs = 0;
+let doubleClickDelay = 250;
+let clickTimeout = null;
 canvas.addEventListener('mousedown', (event) => {
-    panStart(event.offsetX, event.offsetY);
+    console.log('mousedown');
+    const now = Date.now();
+    const delta = now - lastClickMs;
+    if (delta < doubleClickDelay) {
+	// Handle as a double-click
+	clearTimeout(clickTimeout);
+	lastClickMs = 0;
+    } else {
+	lastClickMs = now;
+	clickTimeout = setTimeout(() => {
+	    panStart(event.offsetX, event.offsetY);
+	    lastClickMs = 0; // Reset after action
+	}, doubleClickDelay);
+    }
 });
 
 canvas.addEventListener('mousemove', (event) => {
+    showPos(logical.pointFromCanvas(canvas, event.offsetX, event.offsetY));
+    if (!isPanning) return;
+    console.log('mousemove');
     pan(event.offsetX, event.offsetY);
 });
 
 canvas.addEventListener('mouseup', () => {
+    if (!isPanning) return;
+    console.log('mouseup');
     panEnd();
 });
 

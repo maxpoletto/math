@@ -1,3 +1,5 @@
+let debug = false;
+
 self.onmessage = function(e) {
     const [id, numWorkers] = [e.data.id, e.data.numWorkers];
     const [canvasWidth, canvasHeight] = [e.data.canvasWidth, e.data.canvasHeight];
@@ -12,7 +14,6 @@ self.onmessage = function(e) {
 
     let index = 0;
     let x0 = lx + ldx * id;
-    console.log(`worker ${id}/${numWorkers}, ldx=${ldx}, x0=${x0} np=${numPixels} cw=${canvasWidth} ch=${canvasHeight}`);
     for (let cx = id; cx < canvasWidth; cx += numWorkers) {
 	let y0 = ly;
 	for (let cy = 0; cy < canvasHeight; cy++) {
@@ -30,6 +31,8 @@ self.onmessage = function(e) {
 	}
 	x0 += ldx * numWorkers;
     }
-    console.log(`worker ${id}/${numWorkers}, ldx=${ldx}, x0=${x0} np=${index}/${numPixels} cw=${canvasWidth} ch=${canvasHeight}`);
+    if (debug) {
+	console.log(`worker ${id}/${numWorkers}, ldx=${ldx}, x0=${x0} np=${index}/${numPixels} cw=${canvasWidth} ch=${canvasHeight}`);
+    }
     self.postMessage({ id: id, buf: buf });
 };
