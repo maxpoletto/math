@@ -2,14 +2,13 @@ const lViewport = document.getElementById('viewport') as HTMLSpanElement;
 const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
 
-let hueBase = 250;
 var hueSlider = document.getElementById('hue') as HTMLInputElement;
 var hueVal = document.getElementById('hueval') as HTMLSpanElement;
-hueVal.innerHTML = hueBase.toString();
+let hueBase = +hueSlider.value;
 
 hueSlider.onchange = function () {
     hueBase = +hueSlider.value;
-    hueVal.innerHTML = hueBase.toString();
+    hueVal.innerHTML = hueSlider.value;
     drawMandelbrot();
 }
 
@@ -60,6 +59,7 @@ function updateMetadata() {
  */
 
 window.addEventListener('load', () => {
+    console.log("****************");
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     const hash = window.location.hash.substring(1); // Remove the '#'
