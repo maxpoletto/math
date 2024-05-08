@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/usr/bin/python
 
 # Reference:
 # https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
@@ -8,10 +8,10 @@ import random
 import sys
 
 def usage():
-    print("miller-rabin <n>")
+    print "miller-rabin <n>"
     sys.exit(-1)
 
-def is_probably_prime(n, k):
+def isProbablyPrime(n, k):
     if n % 2 == 0:
         return False
 
@@ -21,13 +21,13 @@ def is_probably_prime(n, k):
         r += 1
         d /= 2
 
-    for i in range(0, k):
+    for i in xrange(0, k):
         a = random.randint(2, n-2)
         x = (a**d) % n
         if x == 1 or x == n-1:
             continue
         comp = True
-        for j in range(1, r):
+        for j in xrange(1, r):
             x = (x*x) % n
             if x == n-1:
                 comp = False
@@ -37,11 +37,12 @@ def is_probably_prime(n, k):
     return True
 
 # Miller-Rabin primality test
-def is_prime(n):
+def isPrime(n):
     if n % 2 == 0:
         return False
 
     w = [ 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 73, 1662803 ]
+
     d = n-1
     s = 0
     while d % 2 == 0:
@@ -55,12 +56,13 @@ def is_prime(n):
         if (a**d) % n == 1:
             continue
         comp = True
-        for r in range(0, s):
+        for r in xrange(0, s):
             if (a**(d*2**r)) % n == n-1:
                 comp = False
                 break
         if comp:
             return False
+
     return True
 
 def main():
@@ -70,8 +72,9 @@ def main():
         usage()
     except IndexError:
         usage()
-    print(is_probably_prime(a, 3))
-    print(is_prime(a))
+
+#    print isPrime(a)
+    print isProbablyPrime(a,3)
 
 if __name__ == "__main__":
     main()
