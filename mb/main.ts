@@ -53,9 +53,8 @@ class Viewport {
         return [this.cx - this.width / 2, this.cy - this.height / 2];
     }
     public toString(): string {
-        return `(${this.cx.toFixed(5)}, ${this.cy.toFixed(5)}) ` +
-            `[(${(this.cx - this.width / 2).toFixed(5)}, ${(this.cy - this.height / 2).toFixed(5)}),` +
-            ` (${(this.cx + this.width / 2).toFixed(5)}, ${(this.cy + this.height / 2).toFixed(5)})]`;
+        return `[(${(this.cx - this.width / 2).toFixed(4)}, ${(this.cy - this.height / 2).toFixed(4)}),` +
+            ` (${(this.cx + this.width / 2).toFixed(4)}, ${(this.cy + this.height / 2).toFixed(4)})]`;
     }
 }
 
@@ -67,11 +66,11 @@ let startY: number;
 let logical: Viewport;
 
 function showPos(xy: [number, number]) {
-    lCurPos.textContent = `(${xy[0]}, ${xy[1]})`;
+    lCurPos.textContent = `(${xy[0].toFixed(4)}, ${xy[1].toFixed(4)})`;
 }
 function updateMetadata() {
     // Update URL
-    const hash = `#${logical.cx},${logical.cy},${scale}`;
+    const hash = `#${logical.cx},${logical.cy},${scale},${iterMax},${hueBase}`;
     history.replaceState(null, '', hash);
     // Update viewport information
     lViewport.textContent = logical.toString();
@@ -87,10 +86,16 @@ window.addEventListener('load', () => {
     const hash = window.location.hash.substring(1); // Remove the '#'
     const parts = hash.split(',');
     let [x, y] = [defaultLogicalCX, defaultLogicalCY];
-    if (parts.length === 3) {
-        scale = parseFloat(parts[2]);
+    if (parts.length === 5) {
         [x, y] = [parseFloat(parts[0]), parseFloat(parts[1])];
+        scale = parseFloat(parts[2]);
         logical = new Viewport(canvas.width / scale, canvas.height / scale, x, y);
+        iterMax = parseFloat(parts[3]);
+        iterSlider.value = iterMax.toString();
+        iterVal.textContent = iterMax.toString();
+        hueBase = parseFloat(parts[4]);
+        hueSlider.value = hueBase.toString();
+        hueVal.textContent = hueBase.toString();
     } else {
         scale = canvas.width / defaultLogicalWidth;
         logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
@@ -285,7 +290,7 @@ canvas.addEventListener('touchend', () => {
 
 let fast : boolean = false;
 let workers: Worker[] = [];
-let numWorkers: number = navigator.hardwareConcurrency - 1;
+let numWorkers: number = navigator.hardwareConcurrency - 1 || 2;
 
 function fastMode(): void {
     console.log("fast mode");
@@ -295,7 +300,7 @@ function fastMode(): void {
 
 function preciseMode(): void {
     console.log("slow mode");
-    initWorkers(10);
+    initWorkers(numWorkers);
     fast = false;
 }
 
