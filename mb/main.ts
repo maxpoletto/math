@@ -82,7 +82,7 @@ window.addEventListener('load', () => {
         scale = canvas.width / defaultLogicalWidth;
         logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
     }
-    initWorkers();
+    initWorkers(10);
     drawMandelbrot();
     isPanning = isZooming = false;
 });
@@ -92,7 +92,7 @@ window.addEventListener('resize', () => {
     canvas.height = canvas.clientHeight;
     scale = canvas.width / logical.width;
     logical.height = canvas.height / scale;
-    initWorkers();
+    initWorkers(10);
     drawMandelbrot();
     isPanning = isZooming = false;
 });
@@ -276,20 +276,22 @@ let numWorkers: number = navigator.hardwareConcurrency - 1;
 
 function fastMode(): void {
     console.log("fast mode");
+    initWorkers(1);
     fast = true;
 }
 
 function preciseMode(): void {
     console.log("slow mode");
+    initWorkers(10);
     fast = false;
 }
 
-function initWorkers(): void {
+function initWorkers(n : number): void {
     if (workers.length > 0) {
         workers.forEach(w => w.terminate());
         workers.length = 0;
     }
-    for (let i = 0; i < numWorkers; i++) {
+    for (let i = 0; i < n; i++) {
         const worker = new Worker('renderworker.js');
         worker.onmessage = function (e) {
             if (!ctx) return;
@@ -305,16 +307,17 @@ const iterMax = 360;
 function drawMandelbrot() {
     if (!ctx) return;
     updateMetadata();
-    let [cw, ch, nw] = [canvas.width, canvas.height, numWorkers];
+    let [cw, ch] = [canvas.width, canvas.height];
     if (fast) {
-        [cw, ch, nw] = [Math.round(cw/10), Math.round(ch/10), 1];
+        [cw, ch] = [Math.round(cw/10), Math.round(ch/10)];
     }
+    const nw = workers.length
     const [ldx, ldy] = [logical.width / cw, logical.height / ch];
     let [lx, ly] = logical.upperLeft();
     for (let i = 0; i < nw; i++) {
         const ocw = Math.round(cw / nw);
         const offscreen = new OffscreenCanvas(ocw, ch);
-        console.log(`sending ${ocw} ${cw} ${ch} ${nw}`);
+        console.log(`sending ${ocw} ${cw} ${ch} ${nw} fast ${fast}`);
         workers[i].postMessage({
             id: i,
             canvas: offscreen,
