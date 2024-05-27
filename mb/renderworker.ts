@@ -1,26 +1,16 @@
 let debug = false;
 
 self.onmessage = function (e) {
-    const [id, numWorkers] = [e.data.id, e.data.numWorkers];
+    const [id, canvas] = [e.data.id, e.data.canvas];
     const [canvasWidth, canvasHeight] = [e.data.canvasWidth, e.data.canvasHeight];
     const [lx, ly] = [e.data.lx, e.data.ly];
     const [ldx, ldy] = [e.data.ldx, e.data.ldy];
-    const iterMax = e.data.iterMax;
-
-    if (typeof window === 'undefined') {
-        console.log("worker render");
-    } else {
-        console.log("main render");
-    }
-
-    // Each pixel's iteration count is a 16-bit int.
-    const numPixels = Math.floor(canvasWidth / numWorkers) * canvasHeight;
-    const buf = new ArrayBuffer(numPixels * 2);
-    const view = new Uint16Array(buf);
+    const [iterMax, hueBase] = [e.data.iterMax, e.data.hueBase];
+    const ctx = canvas.getContext('2d');
 
     let index = 0;
-    let x0 = lx + ldx * id;
-    for (let cx = id; cx < canvasWidth; cx += numWorkers) {
+    let x0 = lx + (ldx * id * canvasWidth);
+    for (let cx = 0; cx < canvasWidth; cx++) {
         let y0 = ly;
         for (let cy = 0; cy < canvasHeight; cy++) {
             let iter = 0;
@@ -32,13 +22,18 @@ self.onmessage = function (e) {
                 y2 = y * y;
                 iter++;
             }
-            view[index++] = iter;
+            if (iter == iterMax) {
+                ctx.fillStyle = '#000';
+            } else {
+                const hue = (hueBase - iter) % iterMax;
+                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+            }
+            ctx.fillRect(cx, cy, 1, 1);
             y0 += ldy;
         }
-        x0 += ldx * numWorkers;
+        x0 += ldx;
     }
-    if (debug) {
-        console.log(`worker ${id}/${numWorkers}, ldx=${ldx}, x0=${x0} np=${index}/${numPixels} cw=${canvasWidth} ch=${canvasHeight}`);
-    }
-    self.postMessage({ id: id, buf: buf }, {transfer: [buf]});
+    const bitmap = canvas.transferToImageBitmap();
+    self.postMessage({ id: id, ow: canvasWidth, dw: e.data.dcw, dh: e.data.dch, h: canvasHeight, bitmap: bitmap },
+        {transfer: [bitmap]});
 };

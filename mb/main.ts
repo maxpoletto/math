@@ -18,6 +18,8 @@ const defaultLogicalWidth = 2.5;
 const defaultLogicalCX = -0.75;
 const defaultLogicalCY = 0;
 
+let debug = false;
+
 class Viewport {
     public width: number;
     public height: number;
@@ -80,7 +82,7 @@ window.addEventListener('load', () => {
         scale = canvas.width / defaultLogicalWidth;
         logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
     }
-    initWorkers(true);
+    initWorkers();
     drawMandelbrot();
     isPanning = isZooming = false;
 });
@@ -90,7 +92,7 @@ window.addEventListener('resize', () => {
     canvas.height = canvas.clientHeight;
     scale = canvas.width / logical.width;
     logical.height = canvas.height / scale;
-    initWorkers(true);
+    initWorkers();
     drawMandelbrot();
     isPanning = isZooming = false;
 });
@@ -268,75 +270,64 @@ canvas.addEventListener('touchend', () => {
  * Rendering logic
  */
 
-const iterMax = 360;
-const defaultNumWorkers = 4;
+let fast : boolean = false;
 let workers: Worker[] = [];
-let numWorkers: number = defaultNumWorkers;
+let numWorkers: number = navigator.hardwareConcurrency - 1;
 
 function fastMode(): void {
-    canvas.width = canvas.clientWidth / 10;
-    canvas.height = canvas.clientHeight / 10;
-    initWorkers(false);
+    console.log("fast mode");
+    fast = true;
 }
 
 function preciseMode(): void {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    initWorkers(true);
+    console.log("slow mode");
+    fast = false;
 }
 
-function initWorkers(multi: boolean): void {
+function initWorkers(): void {
     if (workers.length > 0) {
         workers.forEach(w => w.terminate());
         workers.length = 0;
     }
-    numWorkers = multi ? defaultNumWorkers : 1;
-    const [canvasWidth, canvasHeight] = [canvas.width, canvas.height];
     for (let i = 0; i < numWorkers; i++) {
         const worker = new Worker('renderworker.js');
-        workers.push(worker);
         worker.onmessage = function (e) {
             if (!ctx) return;
-            const id = e.data.id;
-            const view = new Uint16Array(e.data.buf);
-
-            if (typeof window !== 'undefined') {
-                console.log(`main main ${id}/${numWorkers}, cw=${canvasWidth}, ch=${canvasHeight}`);
-            }
-
-            let index = 0;
-            for (let cx = id; cx < canvasWidth; cx += numWorkers) {
-                for (let cy = 0; cy < canvasHeight; cy++) {
-                    const iter = view[index++];
-                    if (iter == iterMax) {
-                        ctx.fillStyle = '#000';
-                    } else {
-                        const hue = (hueBase - iter) % iterMax;
-                        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-                    }
-                    ctx.fillRect(cx, cy, 1, 1);
-                }
-            }
+            const [id, ow, dw, dh, bitmap] = [e.data.id, e.data.ow, e.data.dw, e.data.dh, e.data.bitmap];
+            console.log(`drawing ${id} ${ow} ${dw} ${dh}`)
+            ctx.drawImage(bitmap, id * ow, 0, dw, dh);
         };
+        workers.push(worker);
     }
 }
 
+const iterMax = 360;
 function drawMandelbrot() {
     if (!ctx) return;
     updateMetadata();
-    const [ldx, ldy] = [logical.width / canvas.width, logical.height / canvas.height];
+    let [cw, ch, nw] = [canvas.width, canvas.height, numWorkers];
+    if (fast) {
+        [cw, ch, nw] = [Math.round(cw/10), Math.round(ch/10), 1];
+    }
+    const [ldx, ldy] = [logical.width / cw, logical.height / ch];
     let [lx, ly] = logical.upperLeft();
-    for (let i = 0; i < numWorkers; i++) {
+    for (let i = 0; i < nw; i++) {
+        const ocw = Math.round(cw / nw);
+        const offscreen = new OffscreenCanvas(ocw, ch);
+        console.log(`sending ${ocw} ${cw} ${ch} ${nw}`);
         workers[i].postMessage({
             id: i,
-            numWorkers: numWorkers,
-            canvasWidth: canvas.width,
-            canvasHeight: canvas.height,
+            canvas: offscreen,
+            canvasWidth: ocw,
+            canvasHeight: ch,
+            dcw: Math.round(canvas.width / nw),
+            dch: canvas.height,
             lx: lx,
             ly: ly,
             ldx: ldx,
             ldy: ldy,
-            iterMax: iterMax
-        });
+            iterMax: iterMax,
+            hueBase: hueBase
+        }, [offscreen]);
     }
 }
