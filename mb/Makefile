@@ -3,7 +3,7 @@ TARGETS = main.js renderworker.js
 all: $(TARGETS)
 
 %.js: %.ts
-	@npx tsc $<
+	npx tsc $<
 
 clean:
-	@rm -f $(TARGETS) *~
+	rm -f $(TARGETS) *~
