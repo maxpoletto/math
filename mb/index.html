@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Mandelbrot</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <title>Mandelbrot</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
+
 <body>
-    <canvas id="mandelbrotCanvas"></canvas>
-    <div style="margin-left: 10px">
-      <span id="viewport"></span></br>
-      <span id="curlogical"></span></br>
-      <span id="reset"><a href=".">reset</a></span></br>
-      <span>Hue index:
-	<input type="range" class="slider" id="hue" min="0" max="360" value="250">
-	<span id='hueval'>250</span>
-      </span></br>
-    </div>
-    <script src="main.js"></script>
+  <canvas id="mandelbrotCanvas"></canvas>
+  <div style="margin-left: 10px">
+    <span id="viewport"></span></br>
+    <span id="curlogical"></span></br>
+    <span id="reset"><a href=".">reset</a></span></br>
+    <span>Hue index:
+      <input type="range" class="slider" id="hue" min="0" max="500" value="250">
+      <span id='hueval'>250</span>
+    </span>
+    <span>Max iter:
+      <input type="range" class="slider" id="iter" min="0" max="500" value="360">
+      <span id='iterval'>360</span>
+    </span></br>
+  </div>
+  <script src="main.js"></script>
 </body>
+
 </html>

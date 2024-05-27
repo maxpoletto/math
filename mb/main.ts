@@ -1,15 +1,28 @@
-const lViewport = document.getElementById('viewport') as HTMLSpanElement;
-const lCurPos = document.getElementById('curlogical') as HTMLSpanElement;
 const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
+
+const lViewport = document.getElementById('viewport') as HTMLSpanElement;
+const lCurPos = document.getElementById('curlogical') as HTMLSpanElement;
 
 var hueSlider = document.getElementById('hue') as HTMLInputElement;
 var hueVal = document.getElementById('hueval') as HTMLSpanElement;
 let hueBase = +hueSlider.value;
-
-hueSlider.addEventListener('change', () => {
+hueSlider.addEventListener('input', () => {
     hueBase = +hueSlider.value;
     hueVal.textContent = hueSlider.value;
+});
+hueSlider.addEventListener('change', () => {
+    drawMandelbrot();
+});
+
+var iterSlider = document.getElementById('iter') as HTMLInputElement;
+var iterVal = document.getElementById('iterval') as HTMLSpanElement;
+let iterMax = +iterSlider.value;
+iterSlider.addEventListener('input', () => {
+    iterMax = +iterSlider.value;
+    iterVal.textContent = iterSlider.value;
+});
+iterSlider.addEventListener('change', () => {
     drawMandelbrot();
 });
 
@@ -303,7 +316,6 @@ function initWorkers(n : number): void {
     }
 }
 
-const iterMax = 360;
 function drawMandelbrot() {
     if (!ctx) return;
     updateMetadata();
