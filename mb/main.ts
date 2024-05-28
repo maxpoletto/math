@@ -256,6 +256,7 @@ dispCanvas.addEventListener('touchmove', (event) => {
     event.preventDefault();
     if (event.touches.length == 1) {
         const touch = event.touches[0];
+        showPos(logical.pointFromCanvas(dispCanvas, touch.pageX, touch.pageY));
         pan({ x: touch.pageX, y: touch.pageY });
     } else if (event.touches.length == 2) {
         const distance = getDistanceBetweenTouches(event);
@@ -359,3 +360,28 @@ function drawMandelbrot() {
         }, [stripe]);
     }
 }
+
+/*
+ * Help popup
+ */
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const helpLink = document.getElementById('helpLink');
+    const helpPopup = document.getElementById('helpPopup');
+    const closeButton = document.querySelector('.popup .close');
+
+    helpLink.addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default link behavior
+        helpPopup.style.display = 'block';
+    });
+
+    closeButton.addEventListener('click', () => {
+        helpPopup.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target == helpPopup) {
+            helpPopup.style.display = 'none';
+        }
+    });
+});
