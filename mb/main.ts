@@ -1,5 +1,5 @@
-const canvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
-const ctx = canvas.getContext('2d');
+const dispCanvas = document.getElementById('mandelbrotCanvas') as HTMLCanvasElement;
+const ctx = dispCanvas.getContext('2d');
 
 const lViewport = document.getElementById('viewport') as HTMLSpanElement;
 const lCurPos = document.getElementById('curlogical') as HTMLSpanElement;
@@ -45,8 +45,8 @@ class Viewport {
         this.cx = cx;
         this.cy = cy;
     }
-    public pointFromCanvas(canvas: HTMLCanvasElement, x: number, y: number): [number, number] {
-        let z = canvas.clientWidth / this.width;
+    public pointFromCanvas(c: HTMLCanvasElement, x: number, y: number): [number, number] {
+        let z = c.clientWidth / this.width;
         return [x / z + this.cx - this.width / 2, y / z + this.cy - this.height / 2];
     }
     public upperLeft(): [number, number] {
@@ -81,15 +81,15 @@ function updateMetadata() {
  */
 
 window.addEventListener('load', () => {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    dispCanvas.width = dispCanvas.clientWidth;
+    dispCanvas.height = dispCanvas.clientHeight;
     const hash = window.location.hash.substring(1); // Remove the '#'
     const parts = hash.split(',');
     let [x, y] = [defaultLogicalCX, defaultLogicalCY];
     if (parts.length === 5) {
         [x, y] = [parseFloat(parts[0]), parseFloat(parts[1])];
         scale = parseFloat(parts[2]);
-        logical = new Viewport(canvas.width / scale, canvas.height / scale, x, y);
+        logical = new Viewport(dispCanvas.width / scale, dispCanvas.height / scale, x, y);
         iterMax = parseFloat(parts[3]);
         iterSlider.value = iterMax.toString();
         iterVal.textContent = iterMax.toString();
@@ -97,8 +97,8 @@ window.addEventListener('load', () => {
         hueSlider.value = hueBase.toString();
         hueVal.textContent = hueBase.toString();
     } else {
-        scale = canvas.width / defaultLogicalWidth;
-        logical = new Viewport(defaultLogicalWidth, canvas.clientHeight / scale, x, y);
+        scale = dispCanvas.width / defaultLogicalWidth;
+        logical = new Viewport(defaultLogicalWidth, dispCanvas.clientHeight / scale, x, y);
     }
     initWorkers(10);
     drawMandelbrot();
@@ -106,10 +106,10 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('resize', () => {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    scale = canvas.width / logical.width;
-    logical.height = canvas.height / scale;
+    dispCanvas.width = dispCanvas.clientWidth;
+    dispCanvas.height = dispCanvas.clientHeight;
+    scale = dispCanvas.width / logical.width;
+    logical.height = dispCanvas.height / scale;
     initWorkers(10);
     drawMandelbrot();
     isPanning = isZooming = false;
@@ -121,11 +121,10 @@ window.addEventListener('resize', () => {
 
 let isZooming: boolean;
 let zoomTimeout: number;
-canvas.addEventListener('wheel', (event) => {
-    console.log('wheel');
+dispCanvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     clearTimeout(zoomTimeout);
-    let [x, y] = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
+    let [x, y] = logical.pointFromCanvas(dispCanvas, event.offsetX, event.offsetY);
     let [dx, dy] = [x - logical.cx, y - logical.cy];
     if (event.deltaY < 0) { // zoom in
         scale *= zoomFactor;
@@ -148,7 +147,6 @@ canvas.addEventListener('wheel', (event) => {
     drawMandelbrot();
 
     zoomTimeout = setTimeout(() => {
-        console.log('wheel timeout');
         isZooming = false;
         preciseMode();
         drawMandelbrot();
@@ -159,12 +157,11 @@ canvas.addEventListener('wheel', (event) => {
  * Zooming (with doubleclick)
  */
 
-canvas.addEventListener('dblclick', (event) => {
-    console.log('dblclick');
+dispCanvas.addEventListener('dblclick', (event) => {
     event.preventDefault();
     clearTimeout(clickTimeout); // Prevent single-click action just in case
     lastClickMs = 0;
-    let [x, y] = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
+    let [x, y] = logical.pointFromCanvas(dispCanvas, event.offsetX, event.offsetY);
     let [dx, dy] = [x - logical.cx, y - logical.cy];
     dx /= zoomFactor;
     dy /= zoomFactor;
@@ -207,8 +204,7 @@ function panEnd(): void {
 let lastClickMs = 0;
 let doubleClickDelay = 250;
 let clickTimeout : number = null;
-canvas.addEventListener('mousedown', (event) => {
-    console.log('mousedown');
+dispCanvas.addEventListener('mousedown', (event) => {
     const now = Date.now();
     const delta = now - lastClickMs;
     if (delta < doubleClickDelay) {
@@ -224,16 +220,14 @@ canvas.addEventListener('mousedown', (event) => {
     }
 });
 
-canvas.addEventListener('mousemove', (event) => {
-    showPos(logical.pointFromCanvas(canvas, event.offsetX, event.offsetY));
+dispCanvas.addEventListener('mousemove', (event) => {
+    showPos(logical.pointFromCanvas(dispCanvas, event.offsetX, event.offsetY));
     if (!isPanning) return;
-    console.log('mousemove');
     pan({ x: event.offsetX, y: event.offsetY });
 });
 
-canvas.addEventListener('mouseup', () => {
+dispCanvas.addEventListener('mouseup', () => {
     if (!isPanning) return;
-    console.log('mouseup');
     panEnd();
 });
 
@@ -248,7 +242,7 @@ function getDistanceBetweenTouches(event: TouchEvent): number {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-canvas.addEventListener('touchstart', (event) => {
+dispCanvas.addEventListener('touchstart', (event) => {
     event.preventDefault();
     if (event.touches.length == 1) {
         const touch = event.touches[0];
@@ -258,7 +252,7 @@ canvas.addEventListener('touchstart', (event) => {
     }
 }, { passive: false });
 
-canvas.addEventListener('touchmove', (event) => {
+dispCanvas.addEventListener('touchmove', (event) => {
     event.preventDefault();
     if (event.touches.length == 1) {
         const touch = event.touches[0];
@@ -278,7 +272,7 @@ canvas.addEventListener('touchmove', (event) => {
     }
 }, { passive: false });
 
-canvas.addEventListener('touchend', () => {
+dispCanvas.addEventListener('touchend', () => {
     panEnd();
     isZooming = false;
     initialPinchDistance = -1;
@@ -286,6 +280,16 @@ canvas.addEventListener('touchend', () => {
 
 /*
  * Rendering logic
+ *
+ * We have a display canvas with dimensions dcw x dch and
+ * an off-screen canvas with dimensions ocw x och.
+ * ocw and och may be much smaller than dcw and dch to speed up
+ * panning and zooming.
+ * 
+ * With N workers, the off-screen canvas is divided into stripes of
+ * dimension osw x och, where osw = ocw / N. Each strip is mapped
+ * to a corresponding strip of dimension dsw x dch in the display
+ * canvas.
  */
 
 let fast : boolean = false;
@@ -294,12 +298,12 @@ let numWorkers: number = navigator.hardwareConcurrency - 1 || 2;
 
 function fastMode(): void {
     console.log("fast mode");
-    initWorkers(1);
+    initWorkers(numWorkers);
     fast = true;
 }
 
 function preciseMode(): void {
-    console.log("slow mode");
+    console.log("precise mode");
     initWorkers(numWorkers);
     fast = false;
 }
@@ -313,9 +317,9 @@ function initWorkers(n : number): void {
         const worker = new Worker('renderworker.js');
         worker.onmessage = function (e) {
             if (!ctx) return;
-            const [id, ow, dw, dh, bitmap] = [e.data.id, e.data.ow, e.data.dw, e.data.dh, e.data.bitmap];
-            console.log(`drawing ${id} ${ow} ${dw} ${dh}`)
-            ctx.drawImage(bitmap, id * ow, 0, dw, dh);
+            const [id, dsw, dch, bitmap] = [e.data.id, e.data.dsw, e.data.dch, e.data.bitmap];
+//            console.log(`drawing ${id} ${ow} ${dw} ${dh}`)
+            ctx.drawImage(bitmap, id * dsw, 0, dsw, dch);
         };
         workers.push(worker);
     }
@@ -324,30 +328,30 @@ function initWorkers(n : number): void {
 function drawMandelbrot() {
     if (!ctx) return;
     updateMetadata();
-    let [cw, ch] = [canvas.width, canvas.height];
+    let [ocw, och] = [dispCanvas.width, dispCanvas.height];
     if (fast) {
-        [cw, ch] = [Math.round(cw/10), Math.round(ch/10)];
+        [ocw, och] = [Math.round(ocw/10), Math.round(och/10)];
     }
     const nw = workers.length
-    const [ldx, ldy] = [logical.width / cw, logical.height / ch];
+    const [ldx, ldy] = [logical.width / ocw, logical.height / och];
     let [lx, ly] = logical.upperLeft();
+    const [osw, dsw] = [Math.round(ocw / nw), Math.round(dispCanvas.width / nw)];
     for (let i = 0; i < nw; i++) {
-        const ocw = Math.round(cw / nw);
-        const offscreen = new OffscreenCanvas(ocw, ch);
-        console.log(`sending ${ocw} ${cw} ${ch} ${nw} fast ${fast}`);
+        const stripe = new OffscreenCanvas(osw, och);
+//        console.log(`sending ${ocw} ${cw} ${ch} ${nw} fast ${fast}`);
         workers[i].postMessage({
             id: i,
-            canvas: offscreen,
-            canvasWidth: ocw,
-            canvasHeight: ch,
-            dcw: Math.round(canvas.width / nw),
-            dch: canvas.height,
+            canvas: stripe,
+            width: osw,
+            height: och,
+            dsw: dsw,
+            dch: dispCanvas.height,
             lx: lx,
             ly: ly,
             ldx: ldx,
             ldy: ldy,
             iterMax: iterMax,
             hueBase: hueBase
-        }, [offscreen]);
+        }, [stripe]);
     }
 }
