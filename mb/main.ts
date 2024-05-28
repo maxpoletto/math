@@ -294,7 +294,7 @@ dispCanvas.addEventListener('touchend', () => {
 
 let fast : boolean = false;
 let workers: Worker[] = [];
-let numWorkers: number = navigator.hardwareConcurrency - 1 || 2;
+let numWorkers: number = Math.min(10, Math.max(navigator.hardwareConcurrency - 1, 2));
 
 function fastMode(): void {
     console.log("fast mode");
@@ -317,9 +317,7 @@ function initWorkers(n : number): void {
         const worker = new Worker('renderworker.js');
         worker.onmessage = function (e) {
             if (!ctx) return;
-            const [id, dsw, dch, bitmap] = [e.data.id, e.data.dsw, e.data.dch, e.data.bitmap];
-//            console.log(`drawing ${id} ${ow} ${dw} ${dh}`)
-            ctx.drawImage(bitmap, id * dsw, 0, dsw, dch);
+            ctx.drawImage(e.data.bitmap, e.data.dx0, 0, e.data.dx1 - e.data.dx0, e.data.dch);
         };
         workers.push(worker);
     }
@@ -335,16 +333,22 @@ function drawMandelbrot() {
     const nw = workers.length
     const [ldx, ldy] = [logical.width / ocw, logical.height / och];
     let [lx, ly] = logical.upperLeft();
-    const [osw, dsw] = [Math.round(ocw / nw), Math.round(dispCanvas.width / nw)];
+    const dsw = Math.round(dispCanvas.width / nw);
     for (let i = 0; i < nw; i++) {
+        const [dx0, dx1] = [dsw * i, dsw * (i + 1)];
+        let [ox0, ox1] = [dx0, dx1];
+        if (fast) {
+            [ox0, ox1] = [Math.round(ox0/10), Math.round(ox1/10)];
+        }
+        const osw = ox1 - ox0;
         const stripe = new OffscreenCanvas(osw, och);
-//        console.log(`sending ${ocw} ${cw} ${ch} ${nw} fast ${fast}`);
         workers[i].postMessage({
-            id: i,
             canvas: stripe,
-            width: osw,
-            height: och,
-            dsw: dsw,
+            ox0: ox0,
+            ox1: ox1,
+            och: och,
+            dx0: dx0,
+            dx1: dx1,
             dch: dispCanvas.height,
             lx: lx,
             ly: ly,

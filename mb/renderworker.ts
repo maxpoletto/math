@@ -1,15 +1,14 @@
 let debug = false;
 
 self.onmessage = function (e) {
-    const [id, canvas] = [e.data.id, e.data.canvas];
-    const [width, height] = [e.data.width, e.data.height];
+    const canvas = e.data.canvas;
+    const [width, height] = [e.data.ox1 - e.data.ox0, e.data.och];
     const [lx, ly] = [e.data.lx, e.data.ly];
     const [ldx, ldy] = [e.data.ldx, e.data.ldy];
     const [iterMax, hueBase] = [e.data.iterMax, e.data.hueBase];
     const ctx = canvas.getContext('2d');
 
-    let index = 0;
-    let x0 = lx + (ldx * id * width);
+    let x0 = lx + ldx * e.data.ox0;
     for (let cx = 0; cx < width; cx++) {
         let y0 = ly;
         for (let cy = 0; cy < height; cy++) {
@@ -34,6 +33,6 @@ self.onmessage = function (e) {
         x0 += ldx;
     }
     const bitmap = canvas.transferToImageBitmap();
-    self.postMessage({ id: id, dsw: e.data.dsw, dch: e.data.dch, bitmap: bitmap },
+    self.postMessage({ dx0: e.data.dx0, dx1: e.data.dx1, dch: e.data.dch, bitmap: bitmap },
         {transfer: [bitmap]});
 };
