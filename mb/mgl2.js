@@ -43,6 +43,9 @@ const fsSource = `
     uniform int u_maxIter;
     uniform float u_hueBase;
     uniform float u_hueMultiplier;
+    uniform bool u_grid;
+    uniform float u_gridSpacing;
+
 
     vec2 complexSquare(vec2 c) {
         return vec2(c.x * c.x - c.y * c.y, 2.0 * c.x * c.y);
@@ -79,6 +82,23 @@ const fsSource = `
     void main() {
         vec2 uv = (gl_FragCoord.xy / u_canvas_dim - vec2(0.5)) * u_logical_dim;
         vec2 c = u_center + uv;
+
+        // Draw grid lines
+        if (u_grid) {
+            // Calculate the line thickness in canvas coordinates
+            float lineThicknessCanvas = 1.0; // Line thickness in pixels
+            float vLineThicknessLogical = lineThicknessCanvas * (u_logical_dim.x / u_canvas_dim.x);
+            float hLineThicknessLogical = lineThicknessCanvas * (u_logical_dim.y / u_canvas_dim.y);
+            
+            vec2 absC = abs(c);
+            vec2 modC = mod(absC, vec2(u_gridSpacing));
+            
+            // Make the x,y axes twice as thick as the other lines.
+            if (modC.x < vLineThicknessLogical || modC.y < hLineThicknessLogical) {
+                gl_FragColor = vec4(1.0);
+                return;
+            }
+        }    
         vec2 z = vec2(0.0);
         int nIter = 0;
         for (int i = 0; i < 10000; i++) {
@@ -162,12 +182,17 @@ function main() {
     const maxIterLocation = gl.getUniformLocation(shaderProgram, 'u_maxIter');
     const hueBaseLocation = gl.getUniformLocation(shaderProgram, 'u_hueBase');
     const hueMultiplierLocation = gl.getUniformLocation(shaderProgram, 'u_hueMultiplier');
+    const gridLocation = gl.getUniformLocation(shaderProgram, 'u_grid');
+    const gridSpacingLocation = gl.getUniformLocation(shaderProgram, 'u_gridSpacing');
 
     // Initial values
     let logical = new Viewport(4.0, 4.0, 0.0, 0.0);
     let maxIter = 250;
     let hueBase = 200.0;
     let hueMultiplier = 5.0;
+
+    let grid = false;
+    let gridSpacing = 0.25;
 
     let startX, startY;
     let startCenter = [logical.cx, logical.cy];
@@ -187,7 +212,9 @@ function main() {
         gl.uniform2f(centerLocation, logical.cx, logical.cy);
         gl.uniform1i(maxIterLocation, maxIter);
         gl.uniform1f(hueBaseLocation, hueBase);
-        gl.uniform1f(hueMultiplierLocation, hueMultiplier)
+        gl.uniform1f(hueMultiplierLocation, hueMultiplier);
+        gl.uniform1i(gridLocation, grid);
+        gl.uniform1f(gridSpacingLocation, gridSpacing);
 
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -196,7 +223,12 @@ function main() {
     // Handle interaction (zooming, panning, etc.)
     viewCoords = document.getElementById('viewCoords');
     pointerCoords = document.getElementById('pointerCoords');
+    gridCheck = document.getElementById('gridCheck');
 
+    gridCheck.addEventListener('change', (event) => {
+        grid = gridCheck.checked;
+        render();
+    });
     canvas.addEventListener('wheel', (event) => {
         event.preventDefault();
         logical.zoom(event.deltaY > 0);
