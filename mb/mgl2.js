@@ -1,4 +1,3 @@
-// - change zoom behavior
 // - fix help page
 // - deal with mobile scrolling
 
@@ -17,12 +16,15 @@ class Viewport {
     adjustAspect(heightToWidth) {
         this.height = this.width * heightToWidth;
     }
-    zoom(out) {
-        this.width *= out ? 1.1 : 0.9;
-        this.height *= out ? 1.1 : 0.9;
+    zoom(canvas, cx, cy, out) {
+        let [x, y] = this.pointFromCanvas(canvas, cx, cy);
+        let [dx, dy] = [x - this.cx, y - this.cy];
+        let z = out ? 1.1 : 0.9;
+        [this.width, this.height, dx, dy] = [this.width * z, this.height * z, dx * z, dy * z];
+        [this.cx, this.cy] = [x - dx, y - dy];
     }
-    pointFromCanvas(c, x, y) {
-        return [this.width * (x / c.width - 0.5) + this.cx, this.cy - this.height * (y / c.height - 0.5)];
+    pointFromCanvas(canvas, x, y) {
+        return [this.width * (x / canvas.width - 0.5) + this.cx, this.cy - this.height * (y / canvas.height - 0.5)];
     }
     toString() {
         return `[(${(this.cx - this.width / 2).toFixed(4)}, ${(this.cy - this.height / 2).toFixed(4)}),` +
@@ -208,7 +210,6 @@ function main() {
     }
     function getURL() {
         const h = window.location.hash.substring(1).split(','); // Remove the '#', split on comma.
-        console.log(h)
         if (h.length != 8) {
             reset();
             render();
@@ -264,7 +265,7 @@ function main() {
     });
     canvas.addEventListener('wheel', (event) => {
         event.preventDefault();
-        logical.zoom(event.deltaY > 0);
+        logical.zoom(canvas, event.offsetX, event.offsetY, event.deltaY > 0);
         render();
     });
     canvas.addEventListener('mousedown', (event) => {
