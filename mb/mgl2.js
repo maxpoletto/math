@@ -1,5 +1,4 @@
-// - populate viewport, position
-// - check why it gets skinny
+// - change zoom behavior
 // - fix help page
 // - deal with mobile scrolling
 
@@ -190,7 +189,7 @@ function main() {
 
     // Initial values
     let logical, maxIter, hueBase, hueMultiplier, grid;
-    let gridSpacing = 0.25;
+    let gridSpacing = 0.1;
     let startX, startY, startCenter;
     let isPanning;
 
@@ -240,6 +239,7 @@ function main() {
 
     function render() {
         setURL();
+        viewCoords.textContent = logical.toString();
         gl.uniform2f(canvasDimLocation, canvas.clientWidth, canvas.clientHeight);
         gl.uniform2f(logicalDimLocation, logical.width, logical.height);
         gl.uniform2f(centerLocation, logical.cx, logical.cy);
@@ -265,7 +265,6 @@ function main() {
     canvas.addEventListener('wheel', (event) => {
         event.preventDefault();
         logical.zoom(event.deltaY > 0);
-        viewCoords.textContent = logical.toString();
         render();
     });
     canvas.addEventListener('mousedown', (event) => {
@@ -281,7 +280,6 @@ function main() {
         const dy = (event.offsetY - startY) / canvas.height * logical.height;
         logical.cx = startCenter[0] - dx;
         logical.cy = startCenter[1] + dy;
-        viewCoords.textContent = logical.toString();
         render();
     });
     canvas.addEventListener('mouseup', (event) => {
@@ -289,6 +287,7 @@ function main() {
     });
     canvas.addEventListener('mouseout', (event) => {
         isPanning = false;
+        pointerCoords.textContent = "outside viewport"
     });
 
     // Handle hue and iteration changes
