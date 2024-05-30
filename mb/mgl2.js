@@ -282,6 +282,24 @@ function main() {
         render();
     });
 
+    // Help pop-up
+    const helpLink = document.getElementById('helpLink');
+    const helpPopup = document.getElementById('helpPopup');
+    const closeButton = document.querySelector('.popup .close');
+
+    helpLink.addEventListener('click', (event) => {
+        event.preventDefault(); // Prevent default link behavior
+        helpPopup.style.display = 'block';
+    });
+    closeButton.addEventListener('click', () => {
+        helpPopup.style.display = 'none';
+    });
+    window.addEventListener('click', (event) => {
+        if (event.target == helpPopup) {
+            helpPopup.style.display = 'none';
+        }
+    });
+
     setupCanvas();
     render();
 }
