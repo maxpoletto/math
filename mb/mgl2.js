@@ -1,14 +1,19 @@
+// - populate viewport, position
+// - check why it gets skinny
+// - fix help page
+// - deal with mobile scrolling
+
 class Viewport {
     width = 0.0;
     height = 0.0;
     cx = 0.0;
     cy = 0.0;
 
-    constructor(w, h, cx, cy) {
-        this.width = w;
-        this.height = h;
+    constructor(cx, cy, w, h) {
         this.cx = cx;
         this.cy = cy;
+        this.width = w;
+        this.height = h;
     }
     adjustAspect(heightToWidth) {
         this.height = this.width * heightToWidth;
@@ -186,17 +191,46 @@ function main() {
     const gridSpacingLocation = gl.getUniformLocation(shaderProgram, 'u_gridSpacing');
 
     // Initial values
-    let logical = new Viewport(4.0, 4.0, 0.0, 0.0);
-    let maxIter = 250;
-    let hueBase = 200.0;
-    let hueMultiplier = 3.0;
-
-    let grid = false;
+    let logical, maxIter, hueBase, hueMultiplier, grid;
     let gridSpacing = 0.25;
+    let startX, startY, startCenter;
+    let isPanning;
 
-    let startX, startY;
-    let startCenter = [logical.cx, logical.cy];
-    let isPanning = false;
+    function reset() {
+        logical = new Viewport(0, 0, 4, 4);
+        maxIter = 250;
+        hueBase = 200.0;
+        hueMultiplier = 3.0;
+        grid = false;
+        startCenter = [logical.cx, logical.cy];
+        isPanning = false;
+    }
+    function setURL() {
+        const h = `#${logical.cx},${logical.cy},${logical.width},${logical.height},${maxIter},${hueBase},${hueMultiplier},${grid}`;
+        history.replaceState(null, '', h);
+    }
+    function getURL() {
+        const h = window.location.hash.substring(1).split(','); // Remove the '#', split on comma.
+        console.log(h)
+        if (h.length != 8) {
+            reset();
+            render();
+            return;
+        }
+        for (i = 0; i < 7; i++) {
+            n = parseFloat(h[i]);
+            if (n !== n) { // NaN is the only value not equal to itself
+                reset();
+                render();
+                return;
+            }
+        }
+        logical = new Viewport(parseFloat(h[0]), parseFloat(h[1]), parseFloat(h[2]), parseFloat(h[3]));
+        maxIter = +h[4];
+        hueBase = parseFloat(h[5]);
+        hueMultiplier = parseFloat(h[6]);
+        grid = (h[7] == "true");
+    }
 
     function setupCanvas() {
         canvas.width = canvas.clientWidth;
@@ -207,6 +241,7 @@ function main() {
     }
 
     function render() {
+        setURL();
         gl.uniform2f(canvasDimLocation, canvas.clientWidth, canvas.clientHeight);
         gl.uniform2f(logicalDimLocation, logical.width, logical.height);
         gl.uniform2f(centerLocation, logical.cx, logical.cy);
@@ -277,6 +312,16 @@ function main() {
         maxIterVal.textContent = event.target.value
         render();
     });
+    window.addEventListener('load', () => {
+        getURL();
+        setupCanvas();
+        render();
+    });
+    window.addEventListener('hashchange', () => {
+        getURL();
+        setupCanvas();
+        render();
+    });
     window.addEventListener('resize', () => {
         setupCanvas();
         render();
@@ -299,9 +344,6 @@ function main() {
             helpPopup.style.display = 'none';
         }
     });
-
-    setupCanvas();
-    render();
 }
 
 main();
