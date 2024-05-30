@@ -1,3 +1,31 @@
+class Viewport {
+    width = 0.0;
+    height = 0.0;
+    cx = 0.0;
+    cy = 0.0;
+
+    constructor(w, h, cx, cy) {
+        this.width = w;
+        this.height = h;
+        this.cx = cx;
+        this.cy = cy;
+    }
+    adjustAspect(heightToWidth) {
+        this.height = this.width * heightToWidth;
+    }
+    zoom(out) {
+        this.width *= out ? 1.1 : 0.9;
+        this.height *= out ? 1.1 : 0.9;
+    }
+    pointFromCanvas(c, x, y) {
+        return [this.width * (x / c.width - 0.5) + this.cx, this.cy - this.height * (y / c.height - 0.5)];
+    }
+    toString() {
+        return `[(${(this.cx - this.width / 2).toFixed(4)}, ${(this.cy - this.height / 2).toFixed(4)}),` +
+            ` (${(this.cx + this.width / 2).toFixed(4)}, ${(this.cy + this.height / 2).toFixed(4)})]`;
+    }
+}
+
 const vsSource = `
     precision highp float;
     attribute vec2 a_pos;
@@ -9,9 +37,9 @@ const vsSource = `
 const fsSource = `
     precision highp float;
 
-    uniform vec2 u_resolution;
+    uniform vec2 u_canvas_dim;
+    uniform vec2 u_logical_dim;
     uniform vec2 u_center;
-    uniform float u_zoom;
     uniform int u_maxIter;
     uniform float u_hueBase;
     uniform float u_hueMultiplier;
@@ -49,8 +77,8 @@ const fsSource = `
     }
 
     void main() {
-        vec2 uv = gl_FragCoord.xy / u_resolution * 4.0 - vec2(2.0 * u_resolution.x / u_resolution.y, 2.0);
-        vec2 c = u_center + uv * u_zoom;
+        vec2 uv = (gl_FragCoord.xy / u_canvas_dim - vec2(0.5)) * u_logical_dim;
+        vec2 c = u_center + uv;
         vec2 z = vec2(0.0);
         int nIter = 0;
         for (int i = 0; i < 10000; i++) {
@@ -126,35 +154,37 @@ function main() {
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
     }
-    function setupCanvas() {
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        setupVertices();
-    }
 
     // Uniform locations
-    const resolutionLocation = gl.getUniformLocation(shaderProgram, 'u_resolution');
+    const canvasDimLocation = gl.getUniformLocation(shaderProgram, 'u_canvas_dim')
+    const logicalDimLocation = gl.getUniformLocation(shaderProgram, 'u_logical_dim');
     const centerLocation = gl.getUniformLocation(shaderProgram, 'u_center');
-    const zoomLocation = gl.getUniformLocation(shaderProgram, 'u_zoom');
     const maxIterLocation = gl.getUniformLocation(shaderProgram, 'u_maxIter');
     const hueBaseLocation = gl.getUniformLocation(shaderProgram, 'u_hueBase');
     const hueMultiplierLocation = gl.getUniformLocation(shaderProgram, 'u_hueMultiplier');
 
     // Initial values
-    let center = [0.0, 0.0];
-    let zoom = 1.0;
+    let logical = new Viewport(4.0, 4.0, 0.0, 0.0);
     let maxIter = 250;
     let hueBase = 200.0;
     let hueMultiplier = 5.0;
+
     let startX, startY;
-    let startCenter = [...center];
+    let startCenter = [logical.cx, logical.cy];
     let isPanning = false;
 
+    function setupCanvas() {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        logical.adjustAspect(canvas.height / canvas.width);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        setupVertices();
+    }
+
     function render() {
-        gl.uniform2f(resolutionLocation, canvas.clientWidth, canvas.clientHeight);
-        gl.uniform2fv(centerLocation, center);
-        gl.uniform1f(zoomLocation, zoom);
+        gl.uniform2f(canvasDimLocation, canvas.clientWidth, canvas.clientHeight);
+        gl.uniform2f(logicalDimLocation, logical.width, logical.height);
+        gl.uniform2f(centerLocation, logical.cx, logical.cy);
         gl.uniform1i(maxIterLocation, maxIter);
         gl.uniform1f(hueBaseLocation, hueBase);
         gl.uniform1f(hueMultiplierLocation, hueMultiplier)
@@ -164,22 +194,29 @@ function main() {
     }
 
     // Handle interaction (zooming, panning, etc.)
+    viewCoords = document.getElementById('viewCoords');
+    pointerCoords = document.getElementById('pointerCoords');
+
     canvas.addEventListener('wheel', (event) => {
         event.preventDefault();
-        zoom *= event.deltaY > 0 ? 1.1 : 0.9;
+        logical.zoom(event.deltaY > 0);
+        viewCoords.textContent = logical.toString();
         render();
     });
     canvas.addEventListener('mousedown', (event) => {
         isPanning = true;
         [startX, startY] = [event.offsetX, event.offsetY];
-        startCenter = [...center];
+        startCenter = [logical.cx, logical.cy];
     });
     canvas.addEventListener('mousemove', (event) => {
+        let p = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
+        pointerCoords.textContent = `(${p[0].toFixed(4)}, ${p[1].toFixed(4)})`;
         if (!isPanning) return;
-        const dx = (event.offsetX - startX) / canvas.width * 4.0 * zoom;
-        const dy = (event.offsetY - startY) / canvas.height * 4.0 * zoom;
-        center[0] = startCenter[0] - dx;
-        center[1] = startCenter[1] + dy;
+        const dx = (event.offsetX - startX) / canvas.width * logical.width;
+        const dy = (event.offsetY - startY) / canvas.height * logical.height;
+        logical.cx = startCenter[0] - dx;
+        logical.cy = startCenter[1] + dy;
+        viewCoords.textContent = logical.toString();
         render();
     });
     canvas.addEventListener('mouseup', (event) => {
