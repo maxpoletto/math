@@ -10,6 +10,16 @@ canvas {
     height: 80%;
 }
 
+#viewCoords {
+    width: 17em;
+    display: inline-block;
+}
+
+.control-row {
+    margin-top: 8px;
+    display: block;
+}
+
 .popup {
     display: none; /* Hidden by default */
     position: fixed;

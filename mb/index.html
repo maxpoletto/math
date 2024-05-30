@@ -11,25 +11,28 @@
   <canvas id="mandelbrotCanvas"></canvas>
   <div style="margin-left: 10px">
     <div>
-      Viewport: <span id="viewCoords"></span>&nbsp;|&nbsp;Pointer: <span id="pointerCoords"></span></br>
+      Viewport: <span id="viewCoords"></span>| Pointer: <span id="pointerCoords"></span></br>
     </div>
-    <div>
-      <a href="#" id="helpLink">Help</a>&nbsp;|&nbsp;
-      <a href=".">Reset</a></span>&nbsp;|&nbsp;
-      <span><input type="checkbox" id="gridCheck" /><label for="gridCheck">&nbsp;Enable grid (0.25 x 0.25)</label></span>
+    <div class="control-row">
+      <a href="#" id="helpLink">Help</a>&nbsp;|
+      <a href=".">Reset</a></span>&nbsp;|
+      <span><input type="checkbox" id="gridCheck" /><label for="gridCheck">&nbsp;Enable grid (0.25 x
+          0.25)</label></span>
     </div>
-    <span>Hue index:
-      <input type="range" class="slider" id="hueBase" min="0" max="360" value="200">
-      <span id='hueBaseVal'>200</span>
-    </span>
-    <span>Hue multiplier:
-      <input type="range" class="slider" id="hueMultiplier" min="0" max="10" value="5">
-      <span id='hueMultiplierVal'>5</span>
-    </span>
-    <span>Max iter:
-      <input type="range" class="slider" id="maxIter" min="0" max="1000" value="250">
-      <span id='maxIterVal'>250</span>
-    </span></br>
+    <div class="control-row">
+      <span>Hue index:
+        <input type="range" class="slider" id="hueBase" min="0" max="360" value="200">
+        <span id='hueBaseVal'>200</span>
+      </span>
+      <span>Hue multiplier:
+        <input type="range" class="slider" id="hueMultiplier" min="0" max="10" value="3">
+        <span id='hueMultiplierVal'>3</span>
+      </span>
+      <span>Max iter:
+        <input type="range" class="slider" id="maxIter" min="0" max="1000" value="250">
+        <span id='maxIterVal'>250</span>
+      </span>
+    </div>
   </div>
   <div id="helpPopup" class="popup">
     <div class="popup-content">

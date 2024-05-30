@@ -189,7 +189,7 @@ function main() {
     let logical = new Viewport(4.0, 4.0, 0.0, 0.0);
     let maxIter = 250;
     let hueBase = 200.0;
-    let hueMultiplier = 5.0;
+    let hueMultiplier = 3.0;
 
     let grid = false;
     let gridSpacing = 0.25;
