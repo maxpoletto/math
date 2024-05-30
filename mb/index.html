@@ -39,11 +39,20 @@
       <span class="close">&times;</span>
       <p>Click (or touch) and drag to pan.</p>
       <p>Mouse wheel (or pinch open / closed) to zoom.</p>
-      <p><em>Max iter</em> limits the number of iterations used to determine whether the Mandelbrot sequence at each
-        point is bounded. See what happens as the value approaches zero!</p>
-      <p><em>Hue base</em> controls the display color. If a point is in the Mandelbrot set, its color is black.
-        Otherwise, if it diverges after <em>n</em> iterations, its hue is computed as ((<em>hueBase</em> - <em>n</em>)
-        mod 360).</p>
+      <p><em>Hue index</em> and <em>hue multiplier</em> control the display color. If a point is in the Mandelbrot set,
+        its color is black.
+        Otherwise, if it diverges after <em>n</em> iterations, its <a href="https://en.wikipedia.org/wiki/Hue">hue</a>,
+        defined as an angular position in a <a href="https://en.wikipedia.org/wiki/Color_wheel">color wheel</a>, is
+        computed as (<em>hue_base</em> - n *
+        <em>hue_multiplier</em>) mod 360. Intuitively, <em>hue index</em> just changes colors, whereas <em>hue
+          multiplier</em> controls the contrast between closely adjacent colors.
+      </p>
+      <p><em>Max iter</em> limits the number of iterations used to determine whether a point is in the Mandelbrot set
+        (whether the Mandelbrot sequence at that
+        point is bounded). Increase the value to see more detail as you zoom in. Also see what happens as the value
+        approaches zero!</p>
+      <p>For further reading, start with the <a href="https://en.wikipedia.org/wiki/Mandelbrot_set">Mandelbrot set
+          Wikipedia entry</a>.</p>
     </div>
   </div>
   <script src="mgl2.js"></script>

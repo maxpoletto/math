@@ -1,5 +1,8 @@
-// - fix help page
 // - deal with mobile scrolling
+
+function printComplex(x, y) {
+    return `(${x.toFixed(4)} ` + (y > 0 ? '+' : '-') + ` ${Math.abs(y).toFixed(4)}i)`;
+}
 
 class Viewport {
     width = 0.0;
@@ -27,8 +30,9 @@ class Viewport {
         return [this.width * (x / canvas.width - 0.5) + this.cx, this.cy - this.height * (y / canvas.height - 0.5)];
     }
     toString() {
-        return `[(${(this.cx - this.width / 2).toFixed(4)}, ${(this.cy - this.height / 2).toFixed(4)}),` +
-            ` (${(this.cx + this.width / 2).toFixed(4)}, ${(this.cy + this.height / 2).toFixed(4)})]`;
+        let [a, b, c, d] = [this.cx - this.width / 2, this.cy - this.height / 2,
+                            this.cx + this.width / 2, this.cy + this.height / 2];
+        return `[${printComplex(a, b)}, ${printComplex(c, d)}]`;
     }
 }
 
@@ -58,6 +62,7 @@ const fsSource = `
     }
 
     // Converts (hue, saturation, brightness) to RGB for rendering.
+    // See https://en.wikipedia.org/wiki/Hue for details.
     // Algorithm suggested by GPT-4o.
     vec3 hsb2rgb(float h, float s, float b) {
         // Chroma ("intensity of color")
@@ -274,8 +279,8 @@ function main() {
         startCenter = [logical.cx, logical.cy];
     });
     canvas.addEventListener('mousemove', (event) => {
-        let p = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
-        pointerCoords.textContent = `(${p[0].toFixed(4)}, ${p[1].toFixed(4)})`;
+        let [x, y] = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
+        pointerCoords.textContent = printComplex(x, y);
         if (!isPanning) return;
         const dx = (event.offsetX - startX) / canvas.width * logical.width;
         const dy = (event.offsetY - startY) / canvas.height * logical.height;
