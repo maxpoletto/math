@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Mandelbrot</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+
+<body>
+  <canvas id="mandelbrotCanvas"></canvas>
+  <div style="margin-left: 10px">
+    Viewport: <span id="viewport"></span></br>
+    Pointer: <span id="curlogical"></span></br>
+    <span id="reset"><a href=".">Reset</a></span>&nbsp;|&nbsp;<a href="#" id="helpLink">Help</a>
+    </br>
+    <span>Hue index:
+      <input type="range" class="slider" id="hue" min="0" max="360" value="200">
+      <span id='hueval'>200</span>
+    </span>
+    <span>Max iter:
+      <input type="range" class="slider" id="iter" min="0" max="360" value="250">
+      <span id='iterval'>250</span>
+    </span></br>
+  </div>
+  <div id="helpPopup" class="popup">
+    <div class="popup-content">
+      <span class="close">&times;</span>
+      <p>Click (or touch) and drag to pan.</p>
+      <p>Mouse wheel (or pinch open / closed) to zoom.</p>
+      <p><em>Max iter</em> limits the number of iterations used to determine whether the Mandelbrot sequence at each
+        point is bounded. See what happens as the value approaches zero!</p>
+      <p><em>Hue base</em> controls the display color. If a point is in the Mandelbrot set, its color is black.
+        Otherwise, if it diverges after <em>n</em> iterations, its hue is computed as ((<em>hueBase</em> - <em>n</em>) mod 360).</p>
+    </div>
+  </div>
+  <script src="slow.js"></script>
+</body>
+
+</html>

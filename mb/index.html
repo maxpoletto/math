@@ -10,17 +10,25 @@
 <body>
   <canvas id="mandelbrotCanvas"></canvas>
   <div style="margin-left: 10px">
-    Viewport: <span id="viewport"></span></br>
-    Pointer: <span id="curlogical"></span></br>
-    <span id="reset"><a href=".">Reset</a></span>&nbsp;|&nbsp;<a href="#" id="helpLink">Help</a>
-    </br>
+    <div>
+      Viewport: <span id="viewCoords"></span>&nbsp;|&nbsp;Pointer: <span id="pointerCoords"></span></br>
+    </div>
+    <div>
+      <a href="#" id="helpLink">Help</a>&nbsp;|&nbsp;
+      <a href=".">Reset</a></span>&nbsp;|&nbsp;
+      <span><input type="checkbox" id="gridCheck" /><label for="gridCheck">&nbsp;Enable grid (0.25 x 0.25)</label></span>
+    </div>
     <span>Hue index:
-      <input type="range" class="slider" id="hue" min="0" max="360" value="200">
-      <span id='hueval'>200</span>
+      <input type="range" class="slider" id="hueBase" min="0" max="360" value="200">
+      <span id='hueBaseVal'>200</span>
+    </span>
+    <span>Hue multiplier:
+      <input type="range" class="slider" id="hueMultiplier" min="0" max="10" value="5">
+      <span id='hueMultiplierVal'>5</span>
     </span>
     <span>Max iter:
-      <input type="range" class="slider" id="iter" min="0" max="360" value="250">
-      <span id='iterval'>250</span>
+      <input type="range" class="slider" id="maxIter" min="0" max="1000" value="250">
+      <span id='maxIterVal'>250</span>
     </span></br>
   </div>
   <div id="helpPopup" class="popup">
@@ -31,10 +39,11 @@
       <p><em>Max iter</em> limits the number of iterations used to determine whether the Mandelbrot sequence at each
         point is bounded. See what happens as the value approaches zero!</p>
       <p><em>Hue base</em> controls the display color. If a point is in the Mandelbrot set, its color is black.
-        Otherwise, if it diverges after <em>n</em> iterations, its hue is computed as ((<em>hueBase</em> - <em>n</em>) mod 360).</p>
+        Otherwise, if it diverges after <em>n</em> iterations, its hue is computed as ((<em>hueBase</em> - <em>n</em>)
+        mod 360).</p>
     </div>
   </div>
-  <script src="main.js"></script>
+  <script src="mgl2.js"></script>
 </body>
 
 </html>

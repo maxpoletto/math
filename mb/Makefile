@@ -1,4 +1,4 @@
-TARGETS = main.js mgl.js renderworker.js
+TARGETS = slow.js renderworker.js
 
 all: $(TARGETS)
 
