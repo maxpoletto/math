@@ -159,17 +159,15 @@ function main() {
 
     gl.useProgram(shaderProgram);
 
-    // Set up the vertex buffer based on the aspect ratio.
     function setupVertices() {
-        const aspect = canvas.clientWidth / canvas.clientHeight;
-        // Vertices describe two triangles that cover the entire WebGL canvas ([-aspect,-1] -> [aspect,1]).
+        // Vertices describe two triangles that cover the entire WebGL canvas.
         const vertices = new Float32Array([
-            -aspect, -1.0,
-            aspect, -1.0,
-            -aspect,  1.0,
-            -aspect,  1.0,
-            aspect, -1.0,
-            aspect,  1.0
+            -1.0, -1.0,
+            1.0, -1.0,
+            -1.0, 1.0,
+            -1.0, 1.0,
+            1.0, -1.0,
+            1.0, 1.0
         ]);
         const vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
