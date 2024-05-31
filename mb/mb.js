@@ -216,7 +216,8 @@ function main() {
     let startX, startY, startCenter;
     let isPanning;
     const gridSpacing = 0.1;
-    const defaultZoomOut = 1.1, defaultZoomIn = 0.9, fastZoomIn = 0.7, slowZoomIn = 0.98, slowZoomOut = 1.02;
+    const zoomOutDefault = 1.1, zoomInDefault = 0.9, zoomInFast = 0.7, zoomInSlow = 0.96, zoomOutSlow = 1.04;
+    const inputTimeoutMs = 200, touchTimeoutMs = 100;
 
     // Resets parameters to default values.
     function reset() {
@@ -282,7 +283,6 @@ function main() {
 
     // Sets up all rendering parameters and passes control to WebGL.
     function render() {
-        setURL();
         setControls();
 
         gl.uniform2f(canvasDimLocation, canvas.clientWidth, canvas.clientHeight);
@@ -312,6 +312,7 @@ function main() {
     }
     function panEnd() {
         isPanning = false;
+        setURL();
     }
     function zoom(ex, ey, amt) {
         logical.zoom(canvas, ex, ey, amt);
@@ -355,9 +356,15 @@ function main() {
     // Event handlers for mouse and keyboard controls.
     //
 
+    let wheelTimeout = null;
     canvas.addEventListener('wheel', (event) => {
         event.preventDefault();
-        zoom(event.offsetX, event.offsetY, event.deltaY > 0 ? defaultZoomOut : defaultZoomIn);
+        clearTimeout(wheelTimeout);
+        wheelTimeout = setTimeout(() => {
+            // Only update the URL if the wheel pauses for a while.
+            setURL();
+        }, inputTimeoutMs)
+        zoom(event.offsetX, event.offsetY, event.deltaY > 0 ? zoomOutDefault : zoomInDefault);
     });
     let clickTimeout = null, lastClickMs = 0, mouseUp = false;
     const doubleClickDelay = 250;
@@ -368,7 +375,7 @@ function main() {
         if (delta < doubleClickDelay) { // Double-click.
             clearTimeout(clickTimeout); // Prevent single-click action just in case.
             lastClickMs = 0;
-            zoom(event.offsetX, event.offsetY, fastZoomIn);
+            zoom(event.offsetX, event.offsetY, zoomInFast);
         } else { // Single click or first of a double-click.
             lastClickMs = now;
             mouseUp = false;
@@ -391,10 +398,16 @@ function main() {
         panEnd();
     });
     canvas.addEventListener('mouseout', (event) => {
-        panEnd();
         pointerCoords.textContent = "outside viewport"
+        panEnd();
     });
+    let keydownTimeout = null;
     canvas.addEventListener('keydown', (event) => {
+        clearTimeout(keydownTimeout);
+        keydownTimeout = setTimeout(() => {
+            // Only update the URL if keystrokes pause for a while.
+            setURL();
+        }, inputTimeoutMs)
         const d = 20; // Pan around by 1/20th of the current axis length.
         switch (event.key) {
             case 'ArrowUp':
@@ -411,10 +424,10 @@ function main() {
                 break;
             case '=':
             case '+': // Some keyboards may require this
-                zoom(canvas.width / 2, canvas.height / 2, defaultZoomIn);
+                zoom(canvas.width / 2, canvas.height / 2, zoomInDefault);
                 return;
             case '-':
-                zoom(canvas.width / 2, canvas.height / 2, defaultZoomOut);
+                zoom(canvas.width / 2, canvas.height / 2, zoomOutDefault);
                 return;
             default:
                 return;
@@ -426,7 +439,8 @@ function main() {
     // Event handlers for touch controls.
     //
 
-    let startPinchDist = -1;
+    let firstPinchDist = -1;
+    let recentTouchEnd = false;
     function touchDist(event) {
         const [t1, t2] = [event.touches[0], event.touches[1]];
         const [dx, dy] = [t2.pageX - t1.pageX, t2.pageY - t1.pageY];
@@ -435,33 +449,40 @@ function main() {
 
     canvas.addEventListener('touchstart', (event) => {
         event.preventDefault();
+        if (recentTouchEnd) return;
         if (event.touches.length == 1) {
             const t = event.touches[0];
             panStart(t.pageX, t.pageY);
         } else if (event.touches.length == 2) {
-            startPinchDist = touchDist(event);
+            firstPinchDist = touchDist(event);
         }
     }, { passive: false });
     canvas.addEventListener('touchmove', (event) => {
         event.preventDefault();
+        if (recentTouchEnd) return;
         if (event.touches.length == 1) {
             const t = event.touches[0];
             updatePointer(t.pageX, t.pageY);
             pan(t.pageX, t.pageY);
         }if (event.touches.length == 2) {
             const distance = touchDist(event);
-            if (startPinchDist < 0) { // Just in case
-                startPinchDist = distance;
-            } else { // Zoom around the midpoint of the pinch.
+            if (firstPinchDist > 0) { // Zoom around the midpoint of the pinch.
                 let [t0, t1] = [event.touches[0], event.touches[1]];
                 let [x, y] = [(t0.pageX + t1.pageX) / 2, (t0.pageY + t1.pageY) / 2];
-                zoom(x, y, startPinchDist > distance ? slowZoomOut : slowZoomIn);
+                zoom(x, y, firstPinchDist > distance ? zoomOutSlow : zoomInSlow);
             }
+            firstPinchDist = distance;
         }
     }, { passive: false });
     canvas.addEventListener('touchend', () => {
         panEnd();
-        startPinchDist = -1;
+        firstPinchDist = -1;
+        recentTouchEnd = true;
+        setTimeout(() => {
+            // Ignore touches briefly to avoid spurious random jumps when
+            // fingers do not leave the screen at exactly the same time.
+            recentTouchEnd = false;
+        }, touchTimeoutMs)
     });
 
     //
