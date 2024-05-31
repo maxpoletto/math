@@ -31,7 +31,7 @@ class Viewport {
     toString() {
         let [a, b, c, d] = [this.cx - this.width / 2, this.cy - this.height / 2,
                             this.cx + this.width / 2, this.cy + this.height / 2];
-        return `[${printComplex(a, b)}, ${printComplex(c, d)}]`;
+        return `[${printComplex(a, b)}, ${printComplex(c, d)}] centered at ${printComplex(this.cx, this.cy)}`;
     }
 }
 

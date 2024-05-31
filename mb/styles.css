@@ -10,12 +10,12 @@ canvas {
     height: 80%;
 }
 
-#viewCoords {
-    width: 19em;
-    display: inline-block;
-}
 .control-row {
     margin-top: 8px;
+    display: block;
+}
+.display-row {
+    margin-top: 5px;
     display: block;
 }
 
