@@ -443,15 +443,12 @@ function main() {
         }
     }, { passive: false });
     canvas.addEventListener('touchmove', (event) => {
-        console.log("touchmove");
         event.preventDefault();
         if (event.touches.length == 1) {
-            console.log("touchmove 1");
             const t = event.touches[0];
             updatePointer(t.pageX, t.pageY);
             pan(t.pageX, t.pageY);
         }if (event.touches.length == 2) {
-            console.log("touchmove 2");
             const distance = touchDist(event);
             if (startPinchDist < 0) { // Just in case
                 startPinchDist = distance;
