@@ -1,6 +1,6 @@
 body, html {
     font-family: Arial, sans-serif;
-    font-size: 20px;
+    font-size: 16px;
     height: 100%;
     margin: 0;
 }
@@ -17,6 +17,10 @@ canvas {
 .display-row {
     margin-top: 5px;
     display: block;
+}
+/* Explicitly set some font sizes to avoid wonkiness. */
+#viewCoords, #pointerCoords {
+    font-size: 16px;
 }
 
 .popup {

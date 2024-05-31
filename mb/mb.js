@@ -443,7 +443,7 @@ function main() {
     let recentTouchEnd = false;
     function touchDist(event) {
         const [t1, t2] = [event.touches[0], event.touches[1]];
-        const [dx, dy] = [t2.pageX - t1.pageX, t2.pageY - t1.pageY];
+        const [dx, dy] = [t2.clientX - t1.clientX, t2.clientY - t1.clientY];
         return Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -452,7 +452,7 @@ function main() {
         if (recentTouchEnd) return;
         if (event.touches.length == 1) {
             const t = event.touches[0];
-            panStart(t.pageX, t.pageY);
+            panStart(t.clientX, t.clientY);
         } else if (event.touches.length == 2) {
             firstPinchDist = touchDist(event);
         }
@@ -462,19 +462,20 @@ function main() {
         if (recentTouchEnd) return;
         if (event.touches.length == 1) {
             const t = event.touches[0];
-            updatePointer(t.pageX, t.pageY);
-            pan(t.pageX, t.pageY);
+            updatePointer(t.clientX, t.clientY);
+            pan(t.clientX, t.clientY);
         }if (event.touches.length == 2) {
             const distance = touchDist(event);
             if (firstPinchDist > 0) { // Zoom around the midpoint of the pinch.
                 let [t0, t1] = [event.touches[0], event.touches[1]];
-                let [x, y] = [(t0.pageX + t1.pageX) / 2, (t0.pageY + t1.pageY) / 2];
+                let [x, y] = [(t0.clientX + t1.clientX) / 2, (t0.clientY + t1.clientY) / 2];
                 zoom(x, y, firstPinchDist > distance ? zoomOutSlow : zoomInSlow);
             }
             firstPinchDist = distance;
         }
     }, { passive: false });
     canvas.addEventListener('touchend', () => {
+        event.preventDefault();
         panEnd();
         firstPinchDist = -1;
         recentTouchEnd = true;
