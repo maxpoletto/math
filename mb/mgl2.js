@@ -233,7 +233,16 @@ function main() {
         hueMultiplier = parseFloat(h[6]);
         grid = (h[7] == "true");
     }
-
+    function setControls() {
+        viewCoords.textContent = logical.toString();
+        hueBaseSlider.value = hueBase;
+        hueBaseStr.textContent = `${hueBase}`;
+        hueMultiplierSlider.value = hueMultiplier;
+        hueMultiplierStr.textContent = `${hueMultiplier}`;
+        maxIterSlider.value = maxIter;
+        maxIterStr.textContent = `${maxIter}`;
+        gridCheck.checked = grid;
+    }
     function setupCanvas() {
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.clientHeight;
@@ -244,7 +253,8 @@ function main() {
 
     function render() {
         setURL();
-        viewCoords.textContent = logical.toString();
+        setControls();
+
         gl.uniform2f(canvasDimLocation, canvas.clientWidth, canvas.clientHeight);
         gl.uniform2f(logicalDimLocation, logical.width, logical.height);
         gl.uniform2f(centerLocation, logical.cx, logical.cy);
@@ -261,8 +271,8 @@ function main() {
     // Handle interaction (zooming, panning, etc.)
     viewCoords = document.getElementById('viewCoords');
     pointerCoords = document.getElementById('pointerCoords');
-    gridCheck = document.getElementById('gridCheck');
 
+    gridCheck = document.getElementById('gridCheck');
     gridCheck.addEventListener('change', (event) => {
         grid = gridCheck.checked;
         render();
@@ -322,22 +332,25 @@ function main() {
         render();
     });
     // Handle hue and iteration changes
-    hueBaseVal = document.getElementById('hueBaseVal');
-    document.getElementById('hueBase').addEventListener('input', (event) => {
+    hueBaseStr = document.getElementById('hueBaseStr');
+    hueBaseSlider = document.getElementById('hueBaseSlider');
+    hueBaseSlider.addEventListener('input', (event) => {
         hueBase = +event.target.value;
-        hueBaseVal.textContent = event.target.value;
+        hueBaseStr.textContent = event.target.value;
         render();
     });
-    hueMultiplierVal = document.getElementById('hueMultiplierVal')
-    document.getElementById('hueMultiplier').addEventListener('input', (event) => {
+    hueMultiplierStr = document.getElementById('hueMultiplierStr');
+    hueMultiplierSlider = document.getElementById('hueMultiplierSlider');
+    hueMultiplierSlider.addEventListener('input', (event) => {
         hueMultiplier = +event.target.value;
-        hueMultiplierVal.textContent = event.target.value;
+        hueMultiplierStr.textContent = event.target.value;
         render();
     });
-    maxIterVal = document.getElementById('maxIterVal')
-    document.getElementById('maxIter').addEventListener('input', (event) => {
+    maxIterStr = document.getElementById('maxIterStr');
+    maxIterSlider = document.getElementById('maxIterSlider');
+    maxIterSlider.addEventListener('input', (event) => {
         maxIter = +event.target.value;
-        maxIterVal.textContent = event.target.value
+        maxIterStr.textContent = event.target.value
         render();
     });
     window.addEventListener('load', () => {

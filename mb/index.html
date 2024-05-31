@@ -21,24 +21,24 @@
     </div>
     <div class="control-row">
       <span>Hue index:
-        <input type="range" class="slider" id="hueBase" min="0" max="360" value="200">
-        <span id='hueBaseVal'>200</span>
+        <input type="range" class="slider" id="hueBaseSlider" min="0" max="360" value="200">
+        <span id='hueBaseStr'>200</span>
       </span>
       <span>Hue multiplier:
-        <input type="range" class="slider" id="hueMultiplier" min="0" max="10" value="3">
-        <span id='hueMultiplierVal'>3</span>
+        <input type="range" class="slider" id="hueMultiplierSlider" min="0" max="10" value="3">
+        <span id='hueMultiplierStr'>3</span>
       </span>
       <span>Max iter:
-        <input type="range" class="slider" id="maxIter" min="0" max="1000" value="250">
-        <span id='maxIterVal'>250</span>
+        <input type="range" class="slider" id="maxIterSlider" min="0" max="1000" value="250">
+        <span id='maxIterStr'>250</span>
       </span>
     </div>
   </div>
   <div id="helpPopup" class="popup">
     <div class="popup-content">
       <span class="close">&times;</span>
-      <p>Click (or touch) and drag to pan.</p>
-      <p>Mouse wheel (or pinch open / closed) to zoom.</p>
+      <p>To pan, click and drag or use the arrow keys. On mobile, touch and drag.</p>
+      <p>To zoom, use the mouse wheel or touchpad, or '=' and '-'. On mobile, pinch open / closed.</p>
       <p><em>Hue index</em> and <em>hue multiplier</em> control the display color. If a point is in the Mandelbrot set,
         its color is black.
         Otherwise, if it diverges after <em>n</em> iterations, its <a href="https://en.wikipedia.org/wiki/Hue">hue</a>,
