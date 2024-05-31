@@ -1,8 +1,4 @@
-// - deal with mobile scrolling
-function printComplex(x, y) {
-    return `(${x.toFixed(4)} ` + (y > 0 ? '+' : '-') + ` ${Math.abs(y).toFixed(4)}i)`;
-}
-
+// Viewport represents the current logical view of the complex plane.
 class Viewport {
     width = 0.0;
     height = 0.0;
@@ -18,11 +14,11 @@ class Viewport {
     adjustAspect(heightToWidth) {
         this.height = this.width * heightToWidth;
     }
-    zoom(canvas, cx, cy, out) {
+    // If amt > 1, zooms out; if amt < 1, zooms in.
+    zoom(canvas, cx, cy, amt) {
         let [x, y] = this.pointFromCanvas(canvas, cx, cy);
         let [dx, dy] = [x - this.cx, y - this.cy];
-        let z = out ? 1.1 : 0.9;
-        [this.width, this.height, dx, dy] = [this.width * z, this.height * z, dx * z, dy * z];
+        [this.width, this.height, dx, dy] = [this.width * amt, this.height * amt, dx * amt, dy * amt];
         [this.cx, this.cy] = [x - dx, y - dy];
     }
     pointFromCanvas(canvas, x, y) {
@@ -31,10 +27,20 @@ class Viewport {
     toString() {
         let [a, b, c, d] = [this.cx - this.width / 2, this.cy - this.height / 2,
                             this.cx + this.width / 2, this.cy + this.height / 2];
-        return `[${printComplex(a, b)}, ${printComplex(c, d)}] centered at ${printComplex(this.cx, this.cy)}`;
+        return `[${complexStr(a, b)}, ${complexStr(c, d)}] centered at ${complexStr(this.cx, this.cy)}`;
     }
 }
 
+// Renders (x, y) as "(x + iy)".
+function complexStr(x, y) {
+    return `(${x.toFixed(4)} ` + (y > 0 ? '+' : '-') + ` i${Math.abs(y).toFixed(4)})`;
+}
+
+//
+// WebGL code.
+//
+
+// Vertex shader. Just passes through the (x, y) position.
 const vsSource = `
     precision highp float;
     attribute vec2 a_pos;
@@ -43,6 +49,7 @@ const vsSource = `
     }
 `;
 
+// Fragment shader. Plots the Mandelbrot set in the current viewport.
 const fsSource = `
     precision highp float;
 
@@ -93,9 +100,9 @@ const fsSource = `
         vec2 uv = (gl_FragCoord.xy / u_canvas_dim - vec2(0.5)) * u_logical_dim;
         vec2 c = u_center + uv;
 
-        // Draw grid lines
+        // Draw grid lines.
         if (u_grid) {
-            // Calculate the line thickness in canvas coordinates
+            // Calculate the line thickness in canvas coordinates.
             float lineThicknessCanvas = 1.0; // Line thickness in pixels
             float vLineThicknessLogical = lineThicknessCanvas * (u_logical_dim.x / u_canvas_dim.x);
             float hLineThicknessLogical = lineThicknessCanvas * (u_logical_dim.y / u_canvas_dim.y);
@@ -112,7 +119,7 @@ const fsSource = `
         vec2 z = vec2(0.0);
         int nIter = 0;
         for (int i = 0; i < 10000; i++) {
-            if (i > u_maxIter) break;
+            if (i > u_maxIter) break; // Required because limits in a WebGL for-loop must be constants.
             z = complexSquare(z) + c;
             nIter = i;
             if (dot(z, z) > 4.0) break;
@@ -138,7 +145,10 @@ function main() {
         return;
     }
 
-    // Compile and link shaders.
+    //
+    // WebGL initialization.
+    //
+
     function compileShader(gl, source, type) {
         const shader = gl.createShader(type);
         gl.shaderSource(shader, source);
@@ -150,19 +160,6 @@ function main() {
         }
         return shader;
     }
-    const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER);
-    const fragmentShader = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
-    const shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        console.error("Unable to initialize the shader program: " + gl.getProgramInfoLog(shaderProgram));
-        return;
-    }
-
-    gl.useProgram(shaderProgram);
 
     function setupVertices() {
         // Vertices describe two triangles that cover the entire WebGL canvas.
@@ -174,8 +171,10 @@ function main() {
             1.0, -1.0,
             1.0, 1.0
         ]);
+        // Create buffer to store data on GPU.
         const vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        // Upload vertex data to the vertexBuffer.
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
         const positionLocation = gl.getAttribLocation(shaderProgram, 'a_pos');
@@ -183,7 +182,22 @@ function main() {
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
     }
 
-    // Uniform locations
+    // Compile and link shaders into a WebGL program, then initialize vertex buffers.
+    const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER);
+    const fragmentShader = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
+    const shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        console.error("Unable to initialize the shader program: " + gl.getProgramInfoLog(shaderProgram));
+        return;
+    }
+    gl.useProgram(shaderProgram);
+    setupVertices();
+
+    // Uniform locations (I/O ports between Javascript and WebGL).
     const canvasDimLocation = gl.getUniformLocation(shaderProgram, 'u_canvas_dim')
     const logicalDimLocation = gl.getUniformLocation(shaderProgram, 'u_logical_dim');
     const centerLocation = gl.getUniformLocation(shaderProgram, 'u_center');
@@ -193,12 +207,18 @@ function main() {
     const gridLocation = gl.getUniformLocation(shaderProgram, 'u_grid');
     const gridSpacingLocation = gl.getUniformLocation(shaderProgram, 'u_gridSpacing');
 
-    // Initial values
+    //
+    // Core Javascript drawing logic.
+    //
+
+    // Parameters that control plot appearance.
     let logical, maxIter, hueBase, hueMultiplier, grid;
-    let gridSpacing = 0.1;
     let startX, startY, startCenter;
     let isPanning;
+    const gridSpacing = 0.1;
+    const defaultZoomOut = 1.1, defaultZoomIn = 0.9, fastZoomIn = 0.7, slowZoomIn = 0.98, slowZoomOut = 1.02;
 
+    // Resets parameters to default values.
     function reset() {
         logical = new Viewport(0, 0, 4, 4);
         maxIter = 250;
@@ -208,10 +228,13 @@ function main() {
         startCenter = [logical.cx, logical.cy];
         isPanning = false;
     }
+
+    // Encodes parameters as a URL hash.
     function setURL() {
         const h = `#${logical.cx},${logical.cy},${logical.width},${logical.height},${maxIter},${hueBase},${hueMultiplier},${grid}`;
         history.replaceState(null, '', h);
     }
+    // Decodes parameters from the URL.
     function getURL() {
         const h = window.location.hash.substring(1).split(','); // Remove the '#', split on comma.
         if (h.length != 8) {
@@ -233,6 +256,7 @@ function main() {
         hueMultiplier = parseFloat(h[6]);
         grid = (h[7] == "true");
     }
+    // Displays current parameter values in UI controls (sliders, etc.).
     function setControls() {
         viewCoords.textContent = logical.toString();
         hueBaseSlider.value = hueBase;
@@ -243,14 +267,20 @@ function main() {
         maxIterStr.textContent = `${maxIter}`;
         gridCheck.checked = grid;
     }
+    // Displays pointer position in UI.
+    function updatePointer(ex, ey) {
+        let [x, y] = logical.pointFromCanvas(canvas, ex, ey);
+        pointerCoords.textContent = complexStr(x, y);
+    }
+    // Adjusts canvas dimensions and viewports (e.g., in response to a resize event).
     function setupCanvas() {
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.clientHeight;
         logical.adjustAspect(canvas.height / canvas.width);
         gl.viewport(0, 0, canvas.width, canvas.height);
-        setupVertices();
     }
 
+    // Sets up all rendering parameters and passes control to WebGL.
     function render() {
         setURL();
         setControls();
@@ -268,70 +298,37 @@ function main() {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    // Handle interaction (zooming, panning, etc.)
+    function panStart(ex, ey) {
+        isPanning = true;
+        [startX, startY] = [ex, ey];
+        startCenter = [logical.cx, logical.cy];
+    }
+    function pan(ex, ey) {
+        const dx = (ex - startX) / canvas.width * logical.width;
+        const dy = (ey - startY) / canvas.height * logical.height;
+        logical.cx = startCenter[0] - dx;
+        logical.cy = startCenter[1] + dy;
+        render();
+    }
+    function panEnd() {
+        isPanning = false;
+    }
+    function zoom(ex, ey, amt) {
+        logical.zoom(canvas, ex, ey, amt);
+        render();
+    }
+
+    //
+    // Event handlers for metadata controls.
+    //
+
     viewCoords = document.getElementById('viewCoords');
     pointerCoords = document.getElementById('pointerCoords');
-
     gridCheck = document.getElementById('gridCheck');
     gridCheck.addEventListener('change', (event) => {
         grid = gridCheck.checked;
         render();
     });
-    canvas.addEventListener('wheel', (event) => {
-        event.preventDefault();
-        logical.zoom(canvas, event.offsetX, event.offsetY, event.deltaY > 0);
-        render();
-    });
-    canvas.addEventListener('mousedown', (event) => {
-        isPanning = true;
-        [startX, startY] = [event.offsetX, event.offsetY];
-        startCenter = [logical.cx, logical.cy];
-    });
-    canvas.addEventListener('mousemove', (event) => {
-        let [x, y] = logical.pointFromCanvas(canvas, event.offsetX, event.offsetY);
-        pointerCoords.textContent = printComplex(x, y);
-        if (!isPanning) return;
-        const dx = (event.offsetX - startX) / canvas.width * logical.width;
-        const dy = (event.offsetY - startY) / canvas.height * logical.height;
-        logical.cx = startCenter[0] - dx;
-        logical.cy = startCenter[1] + dy;
-        render();
-    });
-    canvas.addEventListener('mouseup', (event) => {
-        isPanning = false;
-    });
-    canvas.addEventListener('mouseout', (event) => {
-        isPanning = false;
-        pointerCoords.textContent = "outside viewport"
-    });
-    canvas.addEventListener('keydown', (event) => {
-        let d = 20; // Pan around by 1/20th of the current axis length.
-        switch (event.key) {
-            case 'ArrowUp':
-                logical.cy += logical.height / d;
-                break;
-            case 'ArrowDown':
-                logical.cy -= logical.height / d;
-                break;
-            case 'ArrowLeft':
-                logical.cx -= logical.width / d;
-                break;
-            case 'ArrowRight':
-                logical.cx += logical.width / d;
-                break;
-            case '=':
-            case '+': // Some keyboards may require this
-                logical.zoom(canvas, canvas.width / 2, canvas.height / 2, false);
-                break;
-            case '-':
-                logical.zoom(canvas, canvas.width / 2, canvas.height / 2, true);
-                break;
-            default:
-                return;
-        }
-        render();
-    });
-    // Handle hue and iteration changes
     hueBaseStr = document.getElementById('hueBaseStr');
     hueBaseSlider = document.getElementById('hueBaseSlider');
     hueBaseSlider.addEventListener('input', (event) => {
@@ -353,6 +350,127 @@ function main() {
         maxIterStr.textContent = event.target.value
         render();
     });
+
+    //
+    // Event handlers for mouse and keyboard controls.
+    //
+
+    canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        zoom(event.offsetX, event.offsetY, event.deltaY > 0 ? defaultZoomOut : defaultZoomIn);
+    });
+    let clickTimeout = null, lastClickMs = 0, mouseUp = false;
+    const doubleClickDelay = 250;
+    canvas.addEventListener('mousedown', (event) => {
+        const now = Date.now();
+        const delta = now - lastClickMs;
+        updatePointer(event.offsetX, event.offsetY);
+        if (delta < doubleClickDelay) { // Double-click.
+            clearTimeout(clickTimeout); // Prevent single-click action just in case.
+            lastClickMs = 0;
+            zoom(event.offsetX, event.offsetY, fastZoomIn);
+        } else { // Single click or first of a double-click.
+            lastClickMs = now;
+            mouseUp = false;
+            clickTimeout = setTimeout(() => {
+                if (!mouseUp) {
+                    // If this is still the first click after doubleClickDelay,
+                    // and the user is still holding the button, start panning.
+                    panStart(event.offsetX, event.offsetY);
+                }
+            }, doubleClickDelay);
+        }
+    });
+    canvas.addEventListener('mousemove', (event) => {
+        updatePointer(event.offsetX, event.offsetY);
+        if (!isPanning) return;
+        pan(event.offsetX, event.offsetY);
+    });
+    canvas.addEventListener('mouseup', (event) => {
+        mouseUp = true;
+        panEnd();
+    });
+    canvas.addEventListener('mouseout', (event) => {
+        panEnd();
+        pointerCoords.textContent = "outside viewport"
+    });
+    canvas.addEventListener('keydown', (event) => {
+        const d = 20; // Pan around by 1/20th of the current axis length.
+        switch (event.key) {
+            case 'ArrowUp':
+                logical.cy += logical.height / d;
+                break;
+            case 'ArrowDown':
+                logical.cy -= logical.height / d;
+                break;
+            case 'ArrowLeft':
+                logical.cx -= logical.width / d;
+                break;
+            case 'ArrowRight':
+                logical.cx += logical.width / d;
+                break;
+            case '=':
+            case '+': // Some keyboards may require this
+                zoom(canvas.width / 2, canvas.height / 2, defaultZoomIn);
+                return;
+            case '-':
+                zoom(canvas.width / 2, canvas.height / 2, defaultZoomOut);
+                return;
+            default:
+                return;
+        }
+        render();
+    });
+
+    //
+    // Event handlers for touch controls.
+    //
+
+    let startPinchDist = -1;
+    function touchDist(event) {
+        const [t1, t2] = [event.touches[0], event.touches[1]];
+        const [dx, dy] = [t2.pageX - t1.pageX, t2.pageY - t1.pageY];
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    canvas.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        if (event.touches.length == 1) {
+            const t = event.touches[0];
+            panStart(t.pageX, t.pageY);
+        } else if (event.touches.length == 2) {
+            startPinchDist = touchDist(event);
+        }
+    }, { passive: false });
+    canvas.addEventListener('touchmove', (event) => {
+        console.log("touchmove");
+        event.preventDefault();
+        if (event.touches.length == 1) {
+            console.log("touchmove 1");
+            const t = event.touches[0];
+            updatePointer(t.pageX, t.pageY);
+            pan(t.pageX, t.pageY);
+        }if (event.touches.length == 2) {
+            console.log("touchmove 2");
+            const distance = touchDist(event);
+            if (startPinchDist < 0) { // Just in case
+                startPinchDist = distance;
+            } else { // Zoom around the midpoint of the pinch.
+                let [t0, t1] = [event.touches[0], event.touches[1]];
+                let [x, y] = [(t0.pageX + t1.pageX) / 2, (t0.pageY + t1.pageY) / 2];
+                zoom(x, y, startPinchDist > distance ? slowZoomOut : slowZoomIn);
+            }
+        }
+    }, { passive: false });
+    canvas.addEventListener('touchend', () => {
+        panEnd();
+        startPinchDist = -1;
+    });
+
+    //
+    // Event handlers for window events.
+    //
+
     window.addEventListener('load', () => {
         getURL();
         setupCanvas();
@@ -368,7 +486,10 @@ function main() {
         render();
     });
 
-    // Help pop-up
+    //
+    // Help pop-up.
+    //
+
     const helpLink = document.getElementById('helpLink');
     const helpPopup = document.getElementById('helpPopup');
     const closeButton = document.querySelector('.popup .close');
