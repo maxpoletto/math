@@ -1,5 +1,4 @@
 // - deal with mobile scrolling
-
 function printComplex(x, y) {
     return `(${x.toFixed(4)} ` + (y > 0 ? '+' : '-') + ` ${Math.abs(y).toFixed(4)}i)`;
 }
@@ -295,7 +294,33 @@ function main() {
         isPanning = false;
         pointerCoords.textContent = "outside viewport"
     });
-
+    canvas.addEventListener('keydown', (event) => {
+        let d = 20; // Pan around by 1/20th of the current axis length.
+        switch (event.key) {
+            case 'ArrowUp':
+                logical.cy += logical.height / d;
+                break;
+            case 'ArrowDown':
+                logical.cy -= logical.height / d;
+                break;
+            case 'ArrowLeft':
+                logical.cx -= logical.width / d;
+                break;
+            case 'ArrowRight':
+                logical.cx += logical.width / d;
+                break;
+            case '=':
+            case '+': // Some keyboards may require this
+                logical.zoom(canvas, canvas.width / 2, canvas.height / 2, false);
+                break;
+            case '-':
+                logical.zoom(canvas, canvas.width / 2, canvas.height / 2, true);
+                break;
+            default:
+                return;
+        }
+        render();
+    });
     // Handle hue and iteration changes
     hueBaseVal = document.getElementById('hueBaseVal');
     document.getElementById('hueBase').addEventListener('input', (event) => {
@@ -345,6 +370,14 @@ function main() {
     window.addEventListener('click', (event) => {
         if (event.target == helpPopup) {
             helpPopup.style.display = 'none';
+        }
+    });
+    window.addEventListener('keydown', (event) => {
+        switch (event.key) {
+            case 'Escape':
+                if (helpPopup.style.display != 'none') {
+                    helpPopup.style.display = 'none';
+                }
         }
     });
 }

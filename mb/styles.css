@@ -14,7 +14,6 @@ canvas {
     width: 19em;
     display: inline-block;
 }
-
 .control-row {
     margin-top: 8px;
     display: block;
@@ -32,7 +31,6 @@ canvas {
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
-
 .popup-content {
     background-color: #fefefe;
     margin: 30% auto; /* 30% from the top and centered */
@@ -47,7 +45,6 @@ canvas {
     font-size: 28px;
     font-weight: bold;
 }
-
 .close:hover,
 .close:focus {
     color: black;
