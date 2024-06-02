@@ -379,11 +379,12 @@ function main() {
         } else { // Single click or first of a double-click.
             lastClickMs = now;
             mouseUp = false;
+            let [x, y] = [event.offsetX, event.offsetY];
             clickTimeout = setTimeout(() => {
                 if (!mouseUp) {
                     // If this is still the first click after doubleClickDelay,
                     // and the user is still holding the button, start panning.
-                    panStart(event.offsetX, event.offsetY);
+                    panStart(x, y);
                 }
             }, doubleClickDelay);
         }
