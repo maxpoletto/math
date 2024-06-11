@@ -332,7 +332,7 @@ function main() {
     // Resets parameters to default values.
     function reset() {
         logical = new Viewport(0, 0, 4, 4);
-        maxIter = 250;
+        maxIter = 2500;
         hueBase = 200.0;
         hueMultiplier = 3.0;
         grid = false;
