@@ -27,13 +27,13 @@ class Viewport {
     toString() {
         let [a, b, c, d] = [this.cx - this.width / 2, this.cy - this.height / 2,
                             this.cx + this.width / 2, this.cy + this.height / 2];
-        return `[${complexStr(a, b)}, ${complexStr(c, d)}] centered at ${complexStr(this.cx, this.cy)}`;
+        return `Center ${complexStr(this.cx, this.cy)}, width ${this.width.toExponential(10)}`;
     }
 }
 
 // Renders (x, y) as "(x + iy)".
 function complexStr(x, y) {
-    return `(${x.toFixed(4)} ` + (y > 0 ? '+' : '-') + ` i${Math.abs(y).toFixed(4)})`;
+    return `(${x.toFixed(10)} ` + (y > 0 ? '+' : '-') + ` i${Math.abs(y).toFixed(10)})`;
 }
 
 //
@@ -53,8 +53,8 @@ const vsSource = `
 const fsSource = `
     precision highp float;
 
-    uniform vec2 u_canvas_dim;
-    uniform vec2 u_logical_dim;
+    uniform vec2 u_canvasDim;
+    uniform vec2 u_logicalDim;
     uniform vec2 u_center;
     uniform int u_maxIter;
     uniform float u_hueBase;
@@ -62,6 +62,92 @@ const fsSource = `
     uniform bool u_grid;
     uniform float u_gridSpacing;
 
+    // The following library comes from
+    // https://github.com/munrocket/double.js/blob/master/webgl/double.glsl
+    // by @munrocket.
+    //
+    // MIT License. © 2021 munrocket
+
+    // ===== BEGIN double.glsl library ===== //
+
+    float add(float a, float b) { return (b != 0.) ? a + b : a; }
+    float sub(float a, float b) { return (b != 0.) ? a - b : a; }
+    float mul(float a, float b) { return (b != 1.) ? a * b : a; }
+    float div(float a, float b) { return (b != 1.) ? a / b : a; }
+    float fma(float a, float b, float c) { return a * b + c; }
+
+    vec2 fastTwoSum(float a, float b) {
+        float s = add(a, b);
+        return vec2(s, sub(b, sub(s, a)));
+    }
+
+    vec2 twoSum(float a, float b) {
+        float s = add(a, b);
+        float b1 = sub(s, a);
+        return vec2(s, add(sub(b, b1), sub(a, sub(s, b1))));
+    }
+
+    vec2 twoProd(float a, float b) {
+        float ab = mul(a, b);
+        return vec2(ab, fma(a, b, -ab));
+    }
+
+    vec2 add22(vec2 X, vec2 Y) {
+        vec2 S = twoSum(X[0], Y[0]);
+        vec2 T = twoSum(X[1], Y[1]);
+        vec2 V = fastTwoSum(S[0], add(S[1], T[0]));
+        return fastTwoSum(V[0], add(T[1], V[1]));
+    }
+
+    vec2 sub22(vec2 X, vec2 Y) {
+        vec2 S = twoSum(X[0], -Y[0]);
+        vec2 T = twoSum(X[1], -Y[1]);
+        vec2 V = fastTwoSum(S[0], add(S[1], T[0]));
+        return fastTwoSum(V[0], add(T[1], V[1]));
+    }
+
+    vec2 mul22(vec2 X, vec2 Y) {
+        vec2 S = twoProd(X[0], Y[0]);
+        float t = mul(X[0], Y[1]);
+        float c = fma(X[1], Y[0], mul(X[0], Y[1]));
+        return fastTwoSum(S[0], add(S[1], c));
+    }
+
+    vec2 div22(vec2 X, vec2 Y) {
+        float s = div(X[0], Y[0]);
+        vec2 T = twoProd(s, Y[0]);
+        float c = add(sub(sub(X[0], T[0]), T[1]), X[1]);
+        return fastTwoSum(s, div(sub(c, mul(s, Y[1])), Y[0]));
+    }
+
+    vec2 d(float a) { return vec2(a, 0); }
+
+    // ===== END double.glsl library ===== //
+
+    vec4 dd(vec2 a) { return vec4(d(a.x), d(a.y)); }
+    vec4 ddadd(vec4 a, vec4 b) { return vec4(add22(a.xy, b.xy), add22(a.zw, b.zw)); }
+    vec4 ddsub(vec4 a, vec4 b) { return vec4(sub22(a.xy, b.xy), sub22(a.zw, b.zw)); }
+    vec4 ddmul(vec4 a, vec4 b) { return vec4(mul22(a.xy, b.xy), mul22(a.zw, b.zw)); }
+    vec4 dddiv(vec4 a, vec4 b) { return vec4(div22(a.xy, b.xy), div22(a.zw, b.zw)); }
+
+    vec4 dc(vec2 c) { return vec4(c.x, 0, c.y, 0); }
+
+    vec4 dcadd(vec4 a, vec4 b){
+        return vec4(add22(a.xy, b.xy), add22(a.zw, b.zw));
+    }
+
+    vec4 dcsub(vec4 a, vec4 b){
+        return vec4(sub22(a.xy, b.xy), sub22(a.zw, b.zw));
+    }
+
+    vec4 dcmul(vec4 a, vec4 b){
+        return vec4(sub22(mul22(a.xy, b.xy), mul22(a.zw, b.zw)),
+                    add22(mul22(a.xy, b.zw), mul22(a.zw, b.xy)));
+    }
+
+    vec2 dclen(vec4 a) {
+        return add22(mul22(a.xy, a.xy), mul22(a.zw, a.zw));
+    }
 
     vec2 complexSquare(vec2 c) {
         return vec2(c.x * c.x - c.y * c.y, 2.0 * c.x * c.y);
@@ -96,35 +182,59 @@ const fsSource = `
         return rgb + m;
     }
 
-    void main() {
-        vec2 uv = (gl_FragCoord.xy / u_canvas_dim - vec2(0.5)) * u_logical_dim;
+    int single_precision() {
+        vec2 uv = (gl_FragCoord.xy / u_canvasDim - vec2(0.5)) * u_logicalDim;
         vec2 c = u_center + uv;
-
-        // Draw grid lines.
-        if (u_grid) {
-            // Calculate the line thickness in canvas coordinates.
-            float lineThicknessCanvas = 1.0; // Line thickness in pixels
-            float vLineThicknessLogical = lineThicknessCanvas * (u_logical_dim.x / u_canvas_dim.x);
-            float hLineThicknessLogical = lineThicknessCanvas * (u_logical_dim.y / u_canvas_dim.y);
-            
-            vec2 absC = abs(c);
-            vec2 modC = mod(absC, vec2(u_gridSpacing));
-            
-            // Make the x,y axes twice as thick as the other lines.
-            if (modC.x < vLineThicknessLogical || modC.y < hLineThicknessLogical) {
-                gl_FragColor = vec4(1.0);
-                return;
-            }
-        }    
         vec2 z = vec2(0.0);
         int nIter = 0;
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 20000; i++) {
             if (i > u_maxIter) break; // Required because limits in a WebGL for-loop must be constants.
             z = complexSquare(z) + c;
             nIter = i;
             if (dot(z, z) > 4.0) break;
         }
+        return nIter;
+    }
 
+    int double_precision() {
+        vec4 d_fragCoord = dd(vec2(float(gl_FragCoord.x), float(gl_FragCoord.y)));
+        vec4 d_canvasDim = dd(u_canvasDim);
+        vec4 d_logicalDim = dd(u_logicalDim);
+        vec4 d_center = dd(u_center);
+        vec4 d_half = dd(vec2(0.5));
+        vec4 d_uv = ddmul(ddsub(dddiv(d_fragCoord, d_canvasDim), d_half), d_logicalDim);
+        vec4 d_c = ddadd(d_center, d_uv);
+        vec4 d_z = dd(vec2(0.0));
+        int nIter = 0;
+        for (int i = 0; i < 20000; i++) {
+            if (i > u_maxIter) break; // Required because limits in a WebGL for-loop must be constants.
+            d_z = dcadd(dcmul(d_z, d_z), d_c);
+            nIter = i;
+            if (dclen(d_z).x > 4.0) break;
+        }
+        return nIter;
+    }
+    void main() {
+        if (u_grid) { // Draw grid lines.
+            // Calculate the line thickness in canvas coordinates.
+            float lineThicknessCanvas = 1.0; // Line thickness in pixels
+            float vLineThicknessLogical = lineThicknessCanvas * (u_logicalDim.x / u_canvasDim.x);
+            float hLineThicknessLogical = lineThicknessCanvas * (u_logicalDim.y / u_canvasDim.y);
+            
+            vec2 uv = (gl_FragCoord.xy / u_canvasDim - vec2(0.5)) * u_logicalDim;
+            vec2 c = u_center + uv;
+            vec2 absC = abs(c);
+            vec2 modC = mod(absC, vec2(u_gridSpacing));
+
+            // Make the x,y axes twice as thick as the other lines.
+            if (modC.x < vLineThicknessLogical || modC.y < hLineThicknessLogical) {
+                gl_FragColor = vec4(1.0);
+                return;
+            }
+        }
+
+        bool high_precision = u_logicalDim.x < 1e-4;
+        int nIter = high_precision ? double_precision() : single_precision();        
         float hue = mod(u_hueBase - float(nIter) * u_hueMultiplier, 360.0) / 360.0;
         float brightness = nIter < u_maxIter ? 1.0 : 0.0;
         vec3 color = hsb2rgb(hue, 1.0, brightness);
@@ -198,8 +308,8 @@ function main() {
     setupVertices();
 
     // Uniform locations (I/O ports between Javascript and WebGL).
-    const canvasDimLocation = gl.getUniformLocation(shaderProgram, 'u_canvas_dim')
-    const logicalDimLocation = gl.getUniformLocation(shaderProgram, 'u_logical_dim');
+    const canvasDimLocation = gl.getUniformLocation(shaderProgram, 'u_canvasDim');
+    const logicalDimLocation = gl.getUniformLocation(shaderProgram, 'u_logicalDim');
     const centerLocation = gl.getUniformLocation(shaderProgram, 'u_center');
     const maxIterLocation = gl.getUniformLocation(shaderProgram, 'u_maxIter');
     const hueBaseLocation = gl.getUniformLocation(shaderProgram, 'u_hueBase');
