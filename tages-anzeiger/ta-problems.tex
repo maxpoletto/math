@@ -62,6 +62,34 @@ By the Pythagorean theorem,
 Since $x$ is an integer, $d_2 = (x^2 + x +1)$ is an integer also.
 
 \newpage
+\problem{2024-05-16}{Numbers game}
+
+Alf and Bettina play the following game. They take it in turns to write {\em different} digits
+from left to right until they have a 9-digit number. Alf starts (and finishes). If the resulting number is divisible by 4, Alf wins, otherwise Bettina wins.
+Do Alf or Bettina have a winning strategy? If so, what does it look like?
+
+\solution
+
+A number of two or more digits is divisible by 4 iff its last two digits
+are divisible by 4. (A number whose last two digits are $00$ is divisible by
+4 because 100 is divisible by 4.)
+
+The two-digit numbers with non-repeating digits that are divisible by 4 are:
+\[ 04~08~12~16~20~24~28~32~36~40~48~52~56~60~64~68~72~76~80~84~92~96 \]
+
+Bettina can have a winning strategy. She can use her first three turns
+to ensure that 2, 4, and 6 are used (if Alf has not already chosen
+them). As a result, only the following divisible-by-4 sequences can appear
+in the last two digits:
+\[ 08~80 \]
+
+On her fourth turn, Bettina can pick any remaining odd number. (Since Alf
+has had four turns, there is guaranteed to be at least one.)
+
+Now, even if 0 and 8 are still available, Alf cannot choose a final digit
+such that the last two digits are 08 or 80. Bettina wins.
+
+\newpage
 \problem{2024-06-27}{Digit sum times 2024}
 
 Let $Q(n)$ be the sum of digits of a natural number $n$. For all $n$, $Q(2n) \leq 2Q(n)$.
