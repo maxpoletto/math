@@ -5,6 +5,10 @@
 \usepackage{graphicx}
 \usepackage{amssymb}
 \pagestyle{empty}
+
+\newcommand{\problem}[2]{\section*{#1: #2}}
+\newcommand{\solution}[0]{{\sc solution}}
+
 \title{Tages Anzeiger math problems}
 
 \begin{document}
@@ -13,7 +17,7 @@
 The Zürich daily {\em Tages Anzeiger} has a weekly math column. Here are some
 problems (translated from German to English) and my solutions.
 
-\section{2024-05-02: Overlapping squares}
+\problem{2024-05-02}{Overlapping squares}
 
 Three squares with the given side lenghts overlap as follows:
 
@@ -24,15 +28,47 @@ Three squares with the given side lenghts overlap as follows:
 
 The gray surface is twice as large as the black surface. What is the area of the white surface?
 
+\solution
 
+The area of gray + white is $11^2 + 7^2 = 170$. The area of black + white is $9^2+5^2 = 106$.
 
-\section{2024-06-27: Digit sum times 2024}
+Let $w$ be the white area. Then $170 - w =  2(106-w)$ and it follows that $w = 42$.
+
+\newpage
+\problem{2024-05-02}{Interesting boxes}
+
+The width and height of a box (a rectangular parallelepiped) are two consecutive
+positive integers. Its depth is equal to the product of those two integers.
+Prove that the diagonal of such a box is always an integer.
+
+\solution
+
+Denote the bottom face of the box by the vertices $ABCD$ and let the corresponding
+vertices of the top face be $WXYZ$. The front face is given by $ABXW$.
+
+Then, given the problem description, $|AB| = x$, $|BX| = x+1$, $|BC| = x(x+1)$.
+
+Define a diagonal $AC$ across the bottom face, and let $d_1 = |AC|$.
+By the Pythagorean theorem,
+\[ d_1^2 = x^2 + x^2(x+1)^2 = x^4 + 2x^3 + 2x^2. \]
+
+A diagonal of the parallelepiped is $AY$. Let $d_2 = |AY|$.
+By the Pythagorean theorem,
+\begin{align*}
+	 d_2^2 &= d_1^2 + (x+1)^2 \\
+           &= x^4 + 2x^3 + 3x^2 + 2x + 1 \\
+           &= (x^2 + x + 1)^2
+\end{align*}
+Since $x$ is an integer, $d_2 = (x^2 + x +1)$ is an integer also.
+
+\newpage
+\problem{2024-06-27}{Digit sum times 2024}
 
 Let $Q(n)$ be the sum of digits of a natural number $n$. For all $n$, $Q(2n) \leq 2Q(n)$.
 
 Find a number $n$ such that $Q(n) = 2024 \cdot Q(3n)$.
 
-\vspace{1em}
+\solution
 
 Restating the problem, we know that for all $n$:
 \[ \frac{Q(2n)}{Q(n)} \leq 2 \]
