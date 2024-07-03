@@ -1,4 +1,9 @@
 #!/opt/local/bin/python3
+"""This code computes the set of all irreducible fractions < 1 and
+with both  numerator and denominator in [2, 49], and then finds
+all 3-combinations with replacement (a, b, c) from that set for
+which both a + b + c and 1/a + 1/b + 1/c are integers.
+"""
 
 import math
 from itertools import combinations_with_replacement
