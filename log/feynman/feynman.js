@@ -14,7 +14,7 @@ function ln(x) {
     var res = 0;
     var ks = [];
     var k = 0, n = 1;
-    while (true) {
+    while (k < 31) {
         if (n * val1p[k] <= x) {
             res += log1p[k];
             n *= val1p[k];
@@ -22,7 +22,6 @@ function ln(x) {
         } else {
             k++;
         }
-        if (k >= 31) break;
     }
     return { res: res, steps: ks };
 }
