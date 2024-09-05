@@ -45,12 +45,12 @@ function init() {
     fix_dpi();
     var d = document.getElementById('depth');
     var dv = document.getElementById('dv');
-    d.onchange = function () {
+    d.oninput = function () {
         depth = this.value;
         dv.innerHTML = depth;
         draw();
     }
-    d.onchange();
+    d.oninput();
 }
 
 init();
