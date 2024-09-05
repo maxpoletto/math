@@ -34,6 +34,10 @@ function computeLn() {
     } else {
         var r = ln(number);
         document.getElementById("outputResult").innerHTML = "ln(" + number + ") = " + r.res;
+        if (number == 1) {
+            document.getElementById("outputExplanation").innerHTML = "Try something more interesting!";
+            return;
+        }
         document.getElementById("outputExplanation").innerHTML = number + " is the product of the following factors, so its logarithm is the sum of the factors' (precomputed) logarithms.";
 
         var tab = document.getElementById("outputTable");
