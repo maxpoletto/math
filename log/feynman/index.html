@@ -7,7 +7,7 @@
 <body>
     <script src="feynman.js"></script>
     <div>
-        From Wikipedia:
+        From <a href="https://en.wikipedia.org/wiki/Logarithm#Feynman's_algorithm">Wikipedia</a>:
         <br>
         <p>
             While at Los Alamos National Laboratory working on the Manhattan Project, Richard Feynman developed a bit-processing algorithm to compute the logarithm 
@@ -21,12 +21,16 @@
         <p>
             Here I have slightly modified the algorithm to compute the natural logarithm of any number x &ge; 1.
         </p>
+        <p>
+            I highly recommend the excellent <a href="https://longnow.org/essays/richard-feynman-connection-machine/">story</a> of how the algorithm came to be.
+        </p>
     </div>
     <p>
         Enter a number &ge; 1: <input type="text" id="inputNumber" onkeydown="if (event.keyCode === 13) computeLn()" autofocus>
         <button onclick="computeLn()">Submit</button>
     </p>
-    <div id="outputResult"></div>
+    <p id="outputResult"></p>
+    <p id="outputExplanation"></p>
     <br>
     <table id="outputTable"></table>
 </body>

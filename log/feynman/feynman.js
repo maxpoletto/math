@@ -34,6 +34,7 @@ function computeLn() {
     } else {
         var r = ln(number);
         document.getElementById("outputResult").innerHTML = "ln(" + number + ") = " + r.res;
+        document.getElementById("outputExplanation").innerHTML = number + " is the product of the following factors, so its logarithm is the sum of the factors' (precomputed) logarithms.";
 
         var tab = document.getElementById("outputTable");
         // Build a new result table.
@@ -60,7 +61,7 @@ function computeLn() {
             } else {
                 row.insertCell(0).innerHTML = "1 + 2^(-" + r.steps[i] + ")";
             }
-            row.insertCell(1).innerHTML = log1p[r.steps[i]];
+            row.insertCell(1).innerHTML = log1p[r.steps[i]].toFixed(20);
         }
     }
 }
