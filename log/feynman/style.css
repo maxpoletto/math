@@ -1,0 +1,18 @@
+.result-table {
+    border-collapse: collapse;
+    border: 1px solid #000;
+}
+
+.result-table thead th {
+    font-weight: bold;
+}
+
+.result-table th,
+.result-table td {
+    padding: 8px;
+    border: 1px solid #000;
+}
+
+.result-table td:last-child, .result-table th:last-child {
+    text-align: right;
+}
