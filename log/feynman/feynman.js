@@ -62,7 +62,7 @@ function computeLn() {
             if (r.steps[i] == 0) {
                 row.insertCell(0).innerHTML = "2";
             } else {
-                row.insertCell(0).innerHTML = "1 + 2^(-" + r.steps[i] + ")";
+                row.insertCell(0).innerHTML = "1 + 2<sup>-" + r.steps[i] + "</sup>";
             }
             row.insertCell(1).innerHTML = log1p[r.steps[i]].toFixed(20);
         }
