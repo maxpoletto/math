@@ -1,26 +1,28 @@
-// The prime factors of 13195 are 5, 7, 13, and 29.
-// What is the largest prime factor of the number 600851475143.
-
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 
-int main(int argc, char **argv)
-{
-    if (argc < 2) {
-        std::cerr << "Please provide a number to analyze.\n";
-        return -1;
+#include "euler_help.h"
+
+int main(int argc, char **argv) {
+    if (argc > 1) {
+        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+            euler_help(3,
+            "The prime factors of 13195 are 5, 7, 13, and 29.\n"
+            "What is the largest prime factor of the number 600851475143.",
+            "003 [NUMBER]\n"
+            "  NUMBER - the number to analyze (default: 600851475143)\n"
+            "  NUMBER must be a positive integer\n");
+        }
     }
-    char* end;
-    int64_t n = std::strtoll(argv[1], &end, 10);
-    if (*end) {
-        std::cerr << "Failed to parse input.\n";
-        return -1;
+    int64_t n = 600851475143;
+    if (argc > 1) {
+        n = std::strtoll(argv[1], nullptr, 10);
     }
 
-    int64_t lastFactor = 0;
+    int64_t lastFactor = 1;
     while (n % 2 == 0) {
         n /= 2;
         lastFactor = 2;
