@@ -1,51 +1,78 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <cstdlib>
 
-const int MAX = 1000;
+#include "euler_help.h"
+
+const unsigned int MAX = 200;
 std::vector<bool> sieve(MAX + 1, true);
 
-// Function to pre-compute primes using Sieve of Eratosthenes
-void sieve() {
-  sieve[0] = sieve[1] = false;
-  for (int i = 2; i * i <= MAX; ++i)    {
-    if (sieve[i])        {
-      for (int j = i * i; j <= MAX; j += i)            {
-	sieve[j] = false;
-      }
+void compute_sieve() {
+    sieve[0] = sieve[1] = false;
+    for (unsigned int i = 2; i * i <= MAX; ++i) {
+        if (sieve[i]) {
+            for (unsigned int j = i + i; j <= MAX; j += i) {
+                sieve[j] = false;
+            }
+        }
     }
-  }
 }
 
-// Function to get the sum of digits of a number
-int sumOfDigits(int n) {
-  int sum = 0;
-  while (n > 0)    {
-    sum += n % 10;
-    n /= 10;
-  }
-  return sum;
+unsigned int sum_of_digits(unsigned int n) {
+    unsigned int sum = 0;
+    while (n > 0) {
+        sum += n % 10;
+        n /= 10;
+    }
+    return sum;
 }
 
-// Function to check if the sum of digits of a number is prime
-bool isSumOfDigitsPrime(int n) {
-    int sum = sumOfDigits(n);
-    return sieve[sum];
+inline bool is_sum_of_digits_prime(unsigned int n) {
+    return sieve[sum_of_digits(n)];
+}
+
+// Counts the number of n-digit numbers whose digit sum is q.
+unsigned long long digit_sums(unsigned int n, unsigned int q) {
+    if (n == 1) {
+        return 1;
+    }
+    if (q > (9*n+1)/2) {
+        return digit_sums(n, 9*n+1-q);
+    }
+    unsigned long long sum = 0;
+    for (unsigned int i = std::max(1u, q-9); i <= q; i++) {
+        sum += digit_sums(n-1, i);
+    }
+    return sum;
 }
 
 int main(int argc, char **argv) {
-  sieve();
-  int n = atoi(argv[1]);
-  int count = 0;
-  int num = 1;
-  while (true)    {
-    if (isSumOfDigitsPrime(num))        {
-      ++count;
-      if (count == n)
-	break;
+    if (argc > 1) {
+        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+            euler_help(845,
+            "Let D(n) be the nth positive integer that has the sum of its digits prime.\n"
+            "For example, D(61) = 157 and D(10^8) = 403539364.\n"
+            "Find D(10^16).",
+            "00845 [N]\n"
+            "  N - the nth positive integer that has the sum of its digits prime (default: 10^16)\n");
+        }
     }
-    ++num;
-  }
-  std::cout << "The " << n << "th number with a prime digit-sum is " << num << ".\n";
-  return 0;
+
+    unsigned long long n = 10000000000000000;
+    if (argc > 1) {
+        n = std::stoull(argv[1]);
+    }
+
+    compute_sieve();
+
+    unsigned long long count = 0;
+    unsigned long long i = 0;
+    while (count < n) {
+        i++;
+        if (is_sum_of_digits_prime(i)) {
+            count++;
+        }
+    }
+    std::cout << "D(" << n << ") = " << i << "\n";
 }
