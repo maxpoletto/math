@@ -7,16 +7,17 @@
 
 #include "euler_help.h"
 
-const unsigned int MAX = 200;
-std::vector<bool> sieve(MAX + 1, true);
+std::vector<bool> sieve;
 
-// Computes the sieve of Eratosthenes for values up to MAX.
-// For Euler 845, the maximum digit sum of a 16-digit number is 144, so MAX = 200 is ample.
-void compute_sieve() {
+typedef __int128_t int128_t;
+
+// Computes the sieve of Eratosthenes for values up to n.
+void compute_sieve(int n) {
+    sieve.resize(n + 1, true);
     sieve[0] = sieve[1] = false;
-    for (unsigned int i = 2; i * i <= MAX; ++i) {
+    for (int i = 2; i * i <= n; ++i) {
         if (sieve[i]) {
-            for (unsigned int j = i + i; j <= MAX; j += i) {
+            for (int j = i + i; j <= n; j += i) {
                 sieve[j] = false;
             }
         }
@@ -24,58 +25,128 @@ void compute_sieve() {
 }
 
 // Computes the binomial coefficient C(n, k).
-unsigned long long binomial(unsigned int n, unsigned int k) {
+int128_t binomial(int n, int k) {
+    if (n < 0 || k < 0 || k > n) {
+        return 0;
+    }
+    if (k == 0 || k == n) {
+        return 1;
+    }
     if (k > n - k) k = n - k;  // Take advantage of symmetry
-    if (k == 0) return 1;
     
-    unsigned long long result = 1;
-    for (unsigned int i = 0; i < k; ++i) {
+    int128_t result = 1;
+    for (int i = 0; i < k; ++i) {
         result = result * (n - i) / (i + 1);
     }
     return result;
 }
 
-// Counts the number of n-digit numbers with sum of digits q.
+int64_t naive_k_digit_sums_n(int k, int n) {
+    int64_t start = pow(10, k-1);
+    int64_t end = pow(10, k);
+    int count = 0;
+    
+    for (int64_t num = start; num < end; num++) {
+        int64_t temp = num;
+        int sum = 0;
+        while (temp > 0) {
+            sum += temp % 10;
+            temp /= 10;
+        }
+        if (sum == n) {
+            count++;
+        }
+    }
+    return count;
+}
+
+// Counts the number of k-digit numbers with sum of digits n.
 // The algorithm comes from:
 // https://math.stackexchange.com/questions/1125070/counting-the-numbers-with-certain-sum-of-digits
-unsigned long long n_digit_sums_q(int n, int q) {
-    if (n == 1) {
-        return static_cast<unsigned long long>(q >= 1 && q <= 9);
+int128_t k_digit_sums_n(int k, int n) {
+    assert(k > 0 && n > 0);
+    if (k == 1) {
+        if (n >= 1 && n <= 9) {
+            return 1;
+        }
+        return 0;
     }
-    unsigned long long total = 0;
+    int128_t total = 0;
+    int kk = k - 1;
     for (int d1 = 1; d1 <= 9; d1++) {
-        int qq = q - d1;
-        int max_k = std::min(n-1, qq / 10);    
-        for (int k = 0; k <= max_k; ++k) {
-            unsigned long long term = binomial(n-1, k) * binomial(q - 10*k + n - 2, n - 2);
-            if (k % 2 == 0) {
+        int nn = n - d1;
+        if (nn < 0) {
+            continue;
+        }
+        int max_i = std::min(kk, nn / 10);
+        assert(max_i >= 0);
+        for (int i = 0; i <= max_i; i++) {
+            int128_t term = binomial(kk, i) * binomial(nn + kk - 1 - 10*i, kk - 1);
+            if (i % 2 == 0) {
                 total += term;
             } else {
                 total -= term;
             }
         }
     }
+//    std::cout << "k_digit_sums_n(" << k << ", " << n << ") = " << static_cast<long long>(total) << "\n";
+    assert(total >= 0);
     return total;
 }
 
-unsigned long long kth_n_digit_sum_q(unsigned long long k, unsigned long long n, int q) {
-    std::cout << "kth_n_digit_sum_q(" << k << ", " << n << ", " << q << ")\n";
-    if (n == 1) {
-        assert(q >= 1 && q <= 9);
+int test_k_digit_sums_n() {
+    // Test with small values of k and n
+    for (int k = 1; k <= 5; k++) {
+        for (int n = 1; n <= 9 * k; n++) {
+            int64_t naive_result = naive_k_digit_sums_n(k, n);
+            int64_t result = k_digit_sums_n(k, n);
+            if (naive_result != result) {
+                std::cout << "Mismatch for k = " << k << " and n = " << n << ": naive = " << naive_result << ", result = " << result << "\n";
+            }
+        }
+    }
+    return 0;
+} 
+
+// Return the i-th k-digit number with digit sum n.
+int128_t i_th_k_digit_sum_n(int128_t i, int128_t k, int n) {
+    assert(n >= 1 && n <= 9*k);
+    assert(i >= 1 && i <= k_digit_sums_n(k, n));
+    if (k == 1) {
+        assert(n >= 1 && n <= 9);
         return 1;
     }
-    unsigned long long total = 0;
+    int128_t total = 0;
     for (int d1 = 1; d1 <= 9; d1++) {
-        int qq = q - d1;
-        unsigned long long nn = n_digit_sums_q(n-1, qq);
-        std::cout << "                   d1: " << d1 << " qq: " << qq << " nn: " << nn << " total: " << total << " k: " << k << "\n";
-        if (total + nn >= k) {
-            return d1 * std::pow(10, n-1) + kth_n_digit_sum_q(k - total, n-1, qq);
+        int nn = n - d1;
+        if (nn < 0) break;
+        int128_t kk = k_digit_sums_n(k-1, nn);
+        if (total + kk >= i) {
+            return d1 * std::pow(10, k-1) + i_th_k_digit_sum_n(i - total, k-1, nn);
         }
-        total += nn; 
+        total += kk; 
     }
-    std::cout << "      kth_n_digit_sum_q(" << k << ", " << n << ", " << q << ") = 0\n";
     return total;
+}
+
+// Return the input-th positive integer that has the sum of its digits prime.
+long long D(long long input) {
+    int128_t n = input, nprimes = 0, ndigits = 1;
+    while (true) {
+        for (int p = 2; p < static_cast<int>(sieve.size()) && p <= 9*ndigits; p++) {
+            if (!sieve[p]) {
+                continue;
+            }
+            int128_t k = k_digit_sums_n(ndigits, p);
+            if (k + nprimes > n) {
+                int128_t r = i_th_k_digit_sum_n(n - nprimes, ndigits, p);
+                return static_cast<long long>(r + nprimes);
+            }
+            nprimes += k;
+        }
+        ndigits++;
+    }
+    return nprimes;
 }
 
 int main(int argc, char **argv) {
@@ -90,38 +161,14 @@ int main(int argc, char **argv) {
         }
     }
 
-    unsigned long long n = 10000000000000000;
+    unsigned long long input = 10000000000000000;
     if (argc > 1) {
-        n = std::stoull(argv[1]);
+        input = std::stoull(argv[1]);
     }
 
-    compute_sieve();
+    // For Euler 845, the maximum digit sum of a 16-digit number is 144,
+    // so a sieve up to 1000 is plenty.
+    compute_sieve(1000);
 
-    unsigned long long nprimes = 0;
-    unsigned long long ndigits = 1;
-
-    while (true) {
-        for (unsigned int p = 2; p < sieve.size() && p <= 9*ndigits; p++) {
-            if (!sieve[p]) {
-                continue;
-            }
-            unsigned long long k = n_digit_sums_q(ndigits, p);
-            if (k + nprimes > n) {
-                std::cout << "k: " << k << " nprimes: " << nprimes << " n: " << n << "\n";
-                std::cout << "Calling kth_n_digit_sum_q(" << n - nprimes << ", " << ndigits << ", " << p << ")\n";
-                unsigned long long r = kth_n_digit_sum_q(n - nprimes, ndigits, p);
-                std::cout << std::right << std::setw(10) << "ndigits: " << std::setw(20) << ndigits << "\n"
-                    << std::right << std::setw(10) << "p: " << std::setw(20) << p << "\n"
-                    << std::right << std::setw(10) << "k: " << std::setw(20) << k << "\n"
-                    << std::right << std::setw(10) << "nprimes: " << std::setw(20) << nprimes << "\n"
-                    << std::right << std::setw(10) << "n: " << std::setw(20) << n << "\n"
-                    << std::right << std::setw(10) << "r: " << std::setw(20) << r << "\n"
-                    << std::right << std::setw(10) << "result: " << std::setw(20) << r + nprimes << "\n";
-                return 0;
-            }
-            nprimes += k;
-        }
-        ndigits++;
-    }
-    std::cout << "D(" << nprimes << ") = " << ndigits << "\n";
+    std::cout << "D(" << input << ") = " << D(input) << "\n";
 }
