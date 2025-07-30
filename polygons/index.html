@@ -4,41 +4,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    #canvas {
-      width: 800px;
-      height: 800px;
-      border: 1px solid black;
-    }
-    #nvert {
-      width: 600px;
-    }
-    body {
-      font-size: 16px;
-      -webkit-text-size-adjust: none;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 20px;
-      }      
-    }
-  </style>
+  <title>Approximating π</title>
+  <link rel="stylesheet" href="../math-viz.css">
   <script src="poly.js" defer></script>
 </head>
 
 <body>
-  <p>
-    Vertices <span id='nv'></span>:
-    <input type="range" class="slider" id="nvert" min="3" max="100" value="3">
-  </p>
-  <p>
-    Area: <span id='area'></span>
-    Perimeter: <span id='peri'></span>
-    Area÷perimeter: <span id='ratio1'></span>
-    Perimeter÷diameter(*): <span id='ratio2'></span>
-  </p>
-  <canvas id="canvas"></canvas>
-  <p>(*) Diameter of circumscribing circle.</p>
+  <div class="container">
+    <h1>Approximating π</h1>
+    <div class="controls">
+      <div class="control-group">
+        <label for="nvert">Vertices <span id='nv'></span>:</label>
+        <input type="range" class="slider" id="nvert" min="3" max="100" value="3">
+      </div>
+    </div>
+    <div class="controls">
+      <p>
+        <strong>Area:</strong> <span id='area'></span> &nbsp;&nbsp;
+        <strong>Perimeter:</strong> <span id='peri'></span> &nbsp;&nbsp;
+        <strong>Area÷perimeter:</strong> <span id='ratio1'></span> &nbsp;&nbsp;
+        <strong>Perimeter÷diameter(*):</strong> <span id='ratio2'></span>
+      </p>
+    </div>
+    <canvas id="canvas"></canvas>
+    <p><em>(*) Diameter of circumscribing circle.</em></p>
+  </div>
 </body>
 
 </html>

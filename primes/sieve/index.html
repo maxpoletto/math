@@ -4,32 +4,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    canvas {
-      width: 800px;
-      height: 800px;
-      border: 1px solid black;
-    }
-    body {
-      font-size: 16px;
-      -webkit-text-size-adjust: none;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 20px;
-      }      
-    }
-  </style>
+  <title>Sieve of Eratosthenes</title>
+  <link rel="stylesheet" href="../../math-viz.css">
 </head>
 
 <body>
-  <p>Find primes up to: <input id="num" value=10000></p>
-  <p>Delay: <input type="range" class="slider" id="delay" min="0" max="100" value="0"></p>
-  <p>Use color: <input type="checkbox" id="color" checked></p>
-  <button class="button" id="runSieve" onclick="runSieve()">
-    Run sieve</button>
-  <hr>
-  <canvas id="canvas"></canvas>
+  <div class="container">
+    <h1>Sieve of Eratosthenes</h1>
+    <div class="controls">
+      <div class="control-group">
+        <label for="num">Find primes up to:</label>
+        <input type="number" id="num" value="10000">
+      </div>
+      <div class="control-group">
+        <label for="delay">Delay:</label>
+        <input type="range" class="slider" id="delay" min="0" max="100" value="0">
+      </div>
+      <div class="control-group">
+        <label for="color">Use color:</label>
+        <input type="checkbox" id="color" checked>
+      </div>
+      <div class="control-group">
+        <button class="button" id="runSieve" onclick="runSieve()">Run sieve</button>
+      </div>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
   <script src="sieve.js" defer></script>
 </body>
 

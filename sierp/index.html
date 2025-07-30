@@ -4,30 +4,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    canvas {
-      width: 800px;
-      height: 800px;
-      border: 1px solid black;
-    }
-    body {
-      font-size: 16px;
-      -webkit-text-size-adjust: none;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 20px;
-      }      
-    }
-  </style>
+  <title>Sierpinski Triangles</title>
+  <link rel="stylesheet" href="../math-viz.css">
   <script src="sierp.js" defer></script>
 </head>
 
 <body>
-  <p>Depth <span id='dv'></span>:
-    <input type="range" class="slider" id="depth" min="0" max="10" value="4">
-  </p>
-  <canvas id="canvas"></canvas>
+  <div class="container">
+    <h1>Sierpinski Triangles</h1>
+    <div class="controls">
+      <div class="control-group">
+        <label for="depth">Depth <span id='dv'></span>:</label>
+        <input type="range" class="slider" id="depth" min="0" max="10" value="4">
+      </div>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
 </body>
 
 </html>

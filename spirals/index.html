@@ -3,32 +3,33 @@
 
 <head>
   <meta charset="UTF-8">
-  <style>
-    #canvas {
-      width: 1000px;
-      height: 1000px;
-      border: 1px solid black;
-    }
-    span {
-      display: inline-block;
-      width: 3em;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spiral Patterns</title>
+  <link rel="stylesheet" href="../math-viz.css">
   <script src="spirals.js" defer></script>
 </head>
 
 <body>
-  <p>
-    Points:
-    <input type="range" class="slider" id="points" min="1" max="2000" value="500">
-    <span id='points_span'></span>
-    Angle (°):
-    <input type="range" class="slider" id="angle" min="1" max="360" value="15">
-    <span id='angle_span'></span>
-    Color:
-    <input type="checkbox" id="color" checked="true">
-  </p>
-  <canvas id="canvas"></canvas>
+  <div class="container">
+    <h1>Spiral Patterns</h1>
+    <div class="controls">
+      <div class="control-group">
+        <label for="points">Points:</label>
+        <input type="range" class="slider" id="points" min="1" max="2000" value="500">
+        <span id='points_span'></span>
+      </div>
+      <div class="control-group">
+        <label for="angle">Angle (°):</label>
+        <input type="range" class="slider" id="angle" min="1" max="360" value="15">
+        <span id='angle_span'></span>
+      </div>
+      <div class="control-group">
+        <label for="color">Color:</label>
+        <input type="checkbox" id="color" checked="true">
+      </div>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
 </body>
 
 </html>
