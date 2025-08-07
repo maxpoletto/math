@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sierpinski Triangles</title>
   <link rel="stylesheet" href="../math-viz.css">
+  <style>
+    .value {
+      min-width: 1.5em;
+      text-align: right;
+    }
+  </style>
   <script src="sierp.js" defer></script>
 </head>
 
@@ -14,8 +20,9 @@
     <h1>Sierpinski Triangles</h1>
     <div class="controls">
       <div class="control-group">
-        <label for="depth">Depth <span id='dv'></span>:</label>
+        <label for="depth">Depth:</label>
         <input type="range" class="slider" id="depth" min="0" max="10" value="4">
+        <span class="value" id='dv'></span>
       </div>
     </div>
     <canvas id="canvas"></canvas>

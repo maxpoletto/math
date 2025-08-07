@@ -59,7 +59,7 @@ label {
   border-radius: 2px;
   background: #ddd;
   outline: none;
-  margin-right: 8px;
+  margin-right: 2px;
   appearance: none;
 }
 
@@ -88,7 +88,8 @@ label {
 /* Value display spans */
 span {
   display: inline-block;
-  min-width: 3em;
+  min-width: 2.5em;
+  text-align: right;
   font-weight: 500;
   color: #3498db;
 }
@@ -190,11 +191,4 @@ hr {
     max-width: calc(100vh - 300px);
   }
 
-}
-
-@media (max-width: 600px) {
-  canvas, #canvas {
-    max-height: calc(100vh - 300px);
-    max-width: calc(100vh - 300px);
-  }
 }
