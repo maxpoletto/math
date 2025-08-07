@@ -1,5 +1,12 @@
+body {
+    overflow: auto;
+
 p {
     padding: 0px 20px;
+}
+
+button {
+    margin-left: 10px;
 }
 
 .result-table {
