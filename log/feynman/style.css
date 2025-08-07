@@ -1,14 +1,11 @@
-body {
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1.1;
-    /* Prevent automatic font size adjustment on mobile browsers */
-    -webkit-text-size-adjust: none;
+p {
+    padding: 0px 20px;
 }
 
 .result-table {
     border-collapse: collapse;
-    border: 1px solid #000;
+    border: 1px solid darkgray;
+    margin-left: 20px;
 }
 
 .result-table thead th {
@@ -18,16 +15,9 @@ body {
 .result-table th,
 .result-table td {
     padding: 8px;
-    border: 1px solid #000;
+    border: 1px solid darkgray;
 }
 
 .result-table td:last-child, .result-table th:last-child {
     text-align: right;
-}
-
-/* Adjust font size for narrow mobile screens */
-@media (max-width: 600px) {
-    body {
-        font-size: 18px;
-    }
 }

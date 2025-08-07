@@ -4,34 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feynman logarithm algorithm</title>
+    <link rel="stylesheet" href="../../math-viz.css">
     <link rel="stylesheet" href="style.css">
     <script src="feynman.js" defer></script>
 </head>
 <body>
-    From <a href="https://en.wikipedia.org/wiki/Logarithm#Feynman's_algorithm">Wikipedia</a>:
-    <br>
-    <p>
-        While at Los Alamos National Laboratory working on the Manhattan Project, Richard Feynman developed a bit-processing algorithm to compute the logarithm
-        that is similar to long division and was later used in the Connection Machine. The algorithm relies on the fact that every real number x where 1 &lt; x &lt; 2
-        can be represented as a product of distinct factors of the form 1 + 2<sup>-k</sup>. The algorithm sequentially builds that product P, starting with P = 1 and k = 1:
-        if P · (1 + 2<sup>-k</sup>) &lt; x, then it changes P to P · (1 + 2<sup>-k</sup>). It then increases k by one regardless. The algorithm stops when k is large enough
-        to give the desired accuracy. Because log(x) is the sum of the terms of the form log(1 + 2<sup>−k</sup>) corresponding to those k for which the factor
-        1 + 2<sup>-k</sup> was included in the product P, log(x) may be computed by simple addition, using a table of log(1 + 2<sup>-k</sup>) for all k.
-        Any base may be used for the logarithm table.
-    </p>
-    <p>
-        Here I have slightly modified the algorithm to compute the natural logarithm of any number x &ge; 1.
-    </p>
-    <p>
-        I highly recommend the excellent <a href="https://longnow.org/essays/richard-feynman-connection-machine/">story</a> of how the algorithm came to be.
-    </p>
-    <label for="inputNumber">Enter a number &ge; 1:</label>
-    <input type="text" id="inputNumber" onkeydown="if (event.keyCode === 13) computeLn()" autofocus>
-        <button onclick="computeLn()">Submit</button>
-    </p>
-    <p id="outputResult"></p>
-    <p id="outputExplanation"></p>
-    <br>
-    <table id="outputTable"></table>
+    <div class="container">
+        <h1>Feynman logarithm algorithm</h1>
+        <p>From <a href="https://en.wikipedia.org/wiki/Logarithm#Feynman's_algorithm">Wikipedia</a>:</p>
+        <p>
+            <em>
+            While at Los Alamos National Laboratory working on the Manhattan Project, Richard Feynman developed a bit-processing algorithm to compute the logarithm
+            that is similar to long division and was later used in the Connection Machine. The algorithm relies on the fact that every real number x where 1 &lt; x &lt; 2
+            can be represented as a product of distinct factors of the form 1 + 2<sup>-k</sup>. The algorithm sequentially builds that product P, starting with P = 1 and k = 1:
+            if P · (1 + 2<sup>-k</sup>) &lt; x, then it changes P to P · (1 + 2<sup>-k</sup>). It then increases k by one regardless. The algorithm stops when k is large enough
+            to give the desired accuracy. Because log(x) is the sum of the terms of the form log(1 + 2<sup>−k</sup>) corresponding to those k for which the factor
+            1 + 2<sup>-k</sup> was included in the product P, log(x) may be computed by simple addition, using a table of log(1 + 2<sup>-k</sup>) for all k.
+            Any base may be used for the logarithm table.
+            </em>
+        </p>
+        <p>
+            Here I have slightly modified the algorithm to compute the natural logarithm of any number x &ge; 1.
+        </p>
+        <p>
+            I highly recommend the excellent <a href="https://longnow.org/essays/richard-feynman-connection-machine/">story</a> of how the algorithm came to be.
+        </p>
+        <div class="controls">
+            <label for="inputNumber">Enter a number &ge; 1:</label>
+            <input type="text" id="inputNumber" onkeydown="if (event.keyCode === 13) computeLn()" autofocus>
+            <button onclick="computeLn()">Submit</button>
+        </div>
+        <p id="outputResult"></p>
+        <p id="outputExplanation"></p>
+        <table id="outputTable"></table>
+    </div>
 </body>
 </html>
