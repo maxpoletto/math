@@ -2,6 +2,11 @@ var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 var dpi = window.devicePixelRatio;
 
+const VERTEX_COLOR = '#3498db';
+const VERTEX_RADIUS = 4;
+const LINE_COLOR = 'gray';
+const LINE_WIDTH = 3;
+
 function fix_dpi() {
     function styleValue(attr) {
         return getComputedStyle(canvas).getPropertyValue(attr).slice(0, -2);
@@ -10,30 +15,43 @@ function fix_dpi() {
     canvas.setAttribute('height', dpi * styleValue('height'));
 }
 
-function poly(zx, zy, r, nvert) {
+function drawVertices() {
+    ctx.strokeStyle = VERTEX_COLOR;
+    for (var i = 0; i < vertices.length; i++) {
+        ctx.beginPath();
+        ctx.arc(vertices[i][0], vertices[i][1], VERTEX_RADIUS, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.stroke();
+    }
+}
+
+function drawPoly(zx, zy, r, nvert) {
     var d = 2 * Math.PI / nvert;
     var a = -Math.PI/2;
     var x = zx + r*Math.cos(a);
     var y = zy + r*Math.sin(a);
+    ctx.lineWidth = LINE_WIDTH;
+    ctx.strokeStyle = LINE_COLOR;
     ctx.beginPath();
     ctx.moveTo(x, y);
+    vertices = [];
     for (i = 0; i < nvert; i++) {
         a += d;
         x = zx + r*Math.cos(a);
         y = zy + r*Math.sin(a);
         ctx.lineTo(x, y);
+        vertices.push([x, y]);
     }
     ctx.closePath();
     ctx.stroke();
+    drawVertices(vertices);
 }
 
 var nvert;
 function draw() {
     var w = canvas.width, h = canvas.height;
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'black';
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    poly(w / 2, h / 2, w / 3, nvert);
+    drawPoly(w / 2, h / 2, w / 3, nvert);
 }
 
 function updateInfo(da, dp, dr1, dr2) {

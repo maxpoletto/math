@@ -1,34 +1,46 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Approximating π</title>
-  <link rel="stylesheet" href="../math-viz.css">
-  <script src="poly.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approximating π</title>
+    <link rel="stylesheet" href="../math-viz.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="poly.js" defer></script>
 </head>
-
 <body>
-  <div class="container">
-    <h1>Approximating π</h1>
-    <div class="controls">
-      <div class="control-group">
-        <label for="nvert">Vertices <span id='nv'></span>:</label>
-        <input type="range" class="slider" id="nvert" min="3" max="100" value="3">
-      </div>
+    <div class="container">
+        <h1>Approximating π</h1>
+        <div class="controls">
+            <div class="control-group">
+                <label for="nvert">Vertices:</label>
+                <input type="range" class="slider" id="nvert" min="3" max="200" value="3">
+                <span class="value" id='nv'></span>
+            </div>
+            <div class="control-group">
+                <div class="outputs">
+                  <div class="output">
+                      <span class="label">Area:</span> <span class="value" id='area'></span>
+                  </div>
+                  <div class="output">
+                      <span class="label">Perimeter:</span> <span class="value" id='peri'></span>
+                  </div>
+                  <div class="output">
+                      <span class="label">Area÷perimeter:</span> <span class="value" id='ratio1'></span>
+                  </div>
+                  <div class="output">
+                      <span class="label">Perimeter÷diameter(*):</span> <span class="value" id='ratio2'></span>
+                  </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <p class="footnote">
+                    (*) Diameter of circumscribing circle.
+                </p>
+            </div>
+        </div>
+        <canvas id="canvas"></canvas>
     </div>
-    <div class="controls">
-      <p>
-        <strong>Area:</strong> <span id='area'></span> &nbsp;&nbsp;
-        <strong>Perimeter:</strong> <span id='peri'></span> &nbsp;&nbsp;
-        <strong>Area÷perimeter:</strong> <span id='ratio1'></span> &nbsp;&nbsp;
-        <strong>Perimeter÷diameter(*):</strong> <span id='ratio2'></span>
-      </p>
-    </div>
-    <canvas id="canvas"></canvas>
-    <p><em>(*) Diameter of circumscribing circle.</em></p>
-  </div>
 </body>
 
 </html>

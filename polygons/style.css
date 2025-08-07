@@ -1,0 +1,51 @@
+.footnote {
+    font-size: 0.8em;
+    font-style: italic;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+#nv {
+    min-width: 1.5em;
+}
+.value {
+    min-width: 4em;
+    text-align: right;
+}
+.controls {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.control-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    text-align: left;
+}
+.outputs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.output {
+    margin: 0px 20px 0px 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+.label {
+    font-weight: bold;
+    color: #555;
+}
+
+canvas, #canvas {
+    max-height: calc(100vh - 300px);
+    max-width: calc(100vh - 300px);
+}
+@media (max-width: 800px) {
+    canvas, #canvas {
+        max-height: calc(100vh - 400px);
+        max-width: calc(100vh - 400px);
+    }
+}
